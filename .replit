@@ -48,5 +48,9 @@ expertMode = true
 [userenv]
 
 [userenv.shared]
-PRIVATE_OBJECT_DIR = "private"
-PUBLIC_OBJECT_DIR = "public"
+PRIVATE_OBJECT_DIR = "/b2ae397c-a060-466d-b065-6860f076ad13/private"
+PUBLIC_OBJECT_DIR = "/b2ae397c-a060-466d-b065-6860f076ad13/public"
+PUBLIC_OBJECT_SEARCH_PATHS = "/b2ae397c-a060-466d-b065-6860f076ad13/public"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-3340a005-2c54-4d73-bd1b-81d33a92f18f"
