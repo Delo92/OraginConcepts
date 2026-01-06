@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Link } from "wouter";
 import type { Service } from "@shared/schema";
 
@@ -62,7 +62,7 @@ export function ServiceCard({ service, showBookButton = true }: ServiceCardProps
           {showBookButton && (
             <Link href={`/book?service=${service.id}`}>
               <Button size="sm" data-testid={`button-book-service-${service.id}`}>
-                Book Now
+                Get Started
               </Button>
             </Link>
           )}

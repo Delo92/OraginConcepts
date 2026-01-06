@@ -50,7 +50,7 @@ export default function AdminDashboard() {
         <h1 className="font-serif text-3xl font-normal mb-2" data-testid="text-admin-dashboard-title">
           Dashboard
         </h1>
-        <p className="text-muted-foreground">Welcome back! Here's an overview of your business.</p>
+        <p className="text-muted-foreground">Welcome back! Here's an overview of your creative business.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm text-muted-foreground">Today's Bookings</p>
+                <p className="text-sm text-muted-foreground">Today's Projects</p>
                 {bookingsLoading ? (
                   <Skeleton className="h-8 w-12 mt-1" />
                 ) : (
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm text-muted-foreground">Total Bookings</p>
+                <p className="text-sm text-muted-foreground">Total Projects</p>
                 {bookingsLoading ? (
                   <Skeleton className="h-8 w-12 mt-1" />
                 ) : (
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-            <CardTitle className="font-serif text-lg">Upcoming Bookings</CardTitle>
+            <CardTitle className="font-serif text-lg">Upcoming Projects</CardTitle>
             <Link href="/admin/bookings">
               <Button variant="ghost" size="sm" data-testid="link-view-all-bookings">
                 View All
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No pending bookings.</p>
+              <p className="text-muted-foreground text-center py-8">No pending projects.</p>
             )}
           </CardContent>
         </Card>

@@ -8,10 +8,10 @@ export function Footer() {
     queryKey: ["/api/settings"],
   });
 
-  const businessName = settings?.businessName || "The Neitzke Way";
-  const footerTagline = settings?.footerTagline || "Experience the art of therapeutic massage. Your journey to relaxation and wellness begins here.";
-  const hoursOfOperation = settings?.hoursOfOperation || "Mon - Sat: 9:00 AM - 7:00 PM";
-  const contactEmail = settings?.contactEmail || "contact@theneitzekway.com";
+  const businessName = settings?.businessName || "Oraginal Concepts";
+  const footerTagline = settings?.footerTagline || "Give Me Your Concept, Let's Make It Real. Websites, videos, mockups, music — we bring your ideas to life.";
+  const hoursOfOperation = settings?.hoursOfOperation || "Mon - Fri: 9:00 AM - 6:00 PM";
+  const contactEmail = settings?.contactEmail || "contact@oraginalconcepts.com";
 
   return (
     <footer className="bg-card border-t border-border">
@@ -42,9 +42,16 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/gallery">
+                  <span className="text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-portfolio">
+                    Portfolio
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/book">
                   <span className="text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-book">
-                    Book Now
+                    Get Started
                   </span>
                 </Link>
               </li>

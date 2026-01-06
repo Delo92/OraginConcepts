@@ -186,7 +186,7 @@ export default function AdminServices() {
           <h1 className="font-serif text-3xl font-normal mb-2" data-testid="text-admin-services-title">
             Services
           </h1>
-          <p className="text-muted-foreground">Manage your massage therapy services.</p>
+          <p className="text-muted-foreground">Manage your creative services and packages.</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -210,7 +210,7 @@ export default function AdminServices() {
                     <FormItem>
                       <FormLabel>Service Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Swedish Massage" {...field} data-testid="input-service-name" />
+                        <Input placeholder="Website Development" {...field} data-testid="input-service-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -225,7 +225,7 @@ export default function AdminServices() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="A relaxing full-body massage..."
+                          placeholder="Professional website design and development tailored to your brand..."
                           className="resize-none min-h-24"
                           {...field}
                           data-testid="input-service-description"
@@ -322,7 +322,7 @@ export default function AdminServices() {
                               >
                                 <img
                                   src={item.mediaUrl}
-                                  alt={item.title || "Gallery image"}
+                                  alt={item.title || "Portfolio image"}
                                   className="w-full h-full object-cover"
                                 />
                               </button>
@@ -332,8 +332,8 @@ export default function AdminServices() {
                       ) : (
                         <div className="border rounded-md p-4 text-center text-muted-foreground text-sm">
                           <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>No images in gallery yet.</p>
-                          <p className="text-xs mt-1">Upload images in the Gallery section first.</p>
+                          <p>No images in portfolio yet.</p>
+                          <p className="text-xs mt-1">Upload images in the Portfolio section first.</p>
                         </div>
                       )}
                       <FormMessage />

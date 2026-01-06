@@ -89,8 +89,8 @@ export default function Booking() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Booking Failed",
-        description: error.message || "Unable to create booking. Please try again.",
+        title: "Request Failed",
+        description: error.message || "Unable to submit your request. Please try again.",
         variant: "destructive",
       });
     },
@@ -179,10 +179,10 @@ export default function Booking() {
       <section className="pt-24 pb-8 px-4 bg-card border-b border-border">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="font-serif text-4xl font-light mb-4" data-testid="text-booking-title">
-            Book Your Session
+            Start Your Project
           </h1>
           <p className="text-muted-foreground">
-            Reserve your appointment in just a few simple steps.
+            Let's bring your concept to life in just a few simple steps.
           </p>
         </div>
       </section>
@@ -402,15 +402,15 @@ export default function Booking() {
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Check className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="font-serif text-2xl mb-2">Booking Reserved!</h2>
+                <h2 className="font-serif text-2xl mb-2">Request Submitted!</h2>
                 <p className="text-muted-foreground">
-                  Complete your payment to confirm your appointment.
+                  Complete your payment to confirm your project.
                 </p>
               </div>
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif text-lg">Booking Summary</CardTitle>
+                  <CardTitle className="font-serif text-lg">Project Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between gap-2">
@@ -494,7 +494,7 @@ export default function Booking() {
                 Thank You!
               </h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                Your booking has been submitted. You will receive a confirmation once your payment is verified.
+                Your project request has been submitted. You will receive a confirmation once your payment is verified.
               </p>
 
               <Card className="mb-8 text-left">

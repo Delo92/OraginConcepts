@@ -90,7 +90,7 @@ export type Booking = typeof bookings.$inferSelect;
 
 export const siteSettings = pgTable("site_settings", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  businessName: text("business_name").notNull().default("The Neitzke Way"),
+  businessName: text("business_name").notNull().default("Oraginal Concepts"),
   tagline: text("tagline"),
   aboutText: text("about_text"),
   heroImageUrl: text("hero_image_url"),

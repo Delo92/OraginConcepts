@@ -148,7 +148,7 @@ export default function AdminGallery() {
     return (
       <img
         src={url}
-        alt={item.title || "Gallery item"}
+        alt={item.title || "Portfolio item"}
         className="w-full h-full object-cover"
       />
     );
@@ -165,7 +165,7 @@ export default function AdminGallery() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-normal" data-testid="text-gallery-heading">
-              Gallery
+              Portfolio
             </h1>
             <p className="text-muted-foreground mt-1">
               Upload photos, videos, and GIFs. Set one as your home page hero.

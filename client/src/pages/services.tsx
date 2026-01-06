@@ -22,10 +22,10 @@ export default function Services() {
       <section className="pt-24 pb-12 px-4 bg-card border-b border-border">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="font-serif text-4xl md:text-5xl font-light mb-4" data-testid="text-services-page-title">
-            My Services
+            Our Services
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Explore my range of therapeutic treatments designed to meet your unique wellness needs.
+            Explore our range of creative services designed to bring your ideas to life.
           </p>
         </div>
       </section>
@@ -67,13 +67,13 @@ export default function Services() {
 
       <section className="py-16 px-4 bg-card">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-serif text-3xl font-normal mb-4">Ready to Book?</h2>
+          <h2 className="font-serif text-3xl font-normal mb-4">Ready to Get Started?</h2>
           <p className="text-muted-foreground mb-8">
-            Choose your preferred service and schedule your session today. Your journey to relaxation awaits.
+            Choose your preferred service and let's bring your concept to life. Your creative journey starts here.
           </p>
           <Link href="/book">
             <Button size="lg" className="rounded-full px-8" data-testid="button-book-services-page">
-              Book Your Session
+              Start Your Project
             </Button>
           </Link>
         </div>

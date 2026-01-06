@@ -108,10 +108,10 @@ export function BookingForm({ onSubmit, isSubmitting }: BookingFormProps) {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Special Requests (Optional)</FormLabel>
+                  <FormLabel>Project Details (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Any allergies, preferences, or special requests..."
+                      placeholder="Tell us about your concept, ideas, or specific requirements..."
                       className="resize-none"
                       {...field}
                       data-testid="input-client-notes"

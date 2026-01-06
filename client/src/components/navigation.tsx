@@ -20,8 +20,8 @@ export function Navigation() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
-    { href: "/gallery", label: "Gallery" },
-    { href: "/book", label: "Book Now" },
+    { href: "/gallery", label: "Portfolio" },
+    { href: "/book", label: "Get Started" },
   ];
 
   return (
@@ -36,7 +36,7 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16 gap-4">
           <Link href="/" data-testid="link-home">
             <span className="font-serif text-2xl font-medium tracking-tight cursor-pointer">
-              The Neitzke Way
+              Oraginal Concepts
             </span>
           </Link>
 
@@ -61,7 +61,7 @@ export function Navigation() {
             <ThemeToggle />
             <div className="hidden md:block">
               <Link href="/book">
-                <Button data-testid="button-book-now-nav">Book a Session</Button>
+                <Button data-testid="button-book-now-nav">Start a Project</Button>
               </Link>
             </div>
             <Button
@@ -95,7 +95,7 @@ export function Navigation() {
               ))}
               <Link href="/book">
                 <Button className="w-full mt-2" onClick={() => setMobileMenuOpen(false)}>
-                  Book a Session
+                  Start a Project
                 </Button>
               </Link>
             </div>

@@ -52,7 +52,7 @@ export default function Gallery() {
     return (
       <img
         src={item.mediaUrl}
-        alt={item.title || "Gallery image"}
+        alt={item.title || "Portfolio image"}
         className={isModal ? "max-h-[70vh] max-w-full object-contain" : "w-full h-full object-cover"}
       />
     );
@@ -66,10 +66,10 @@ export default function Gallery() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="font-serif text-4xl md:text-5xl font-normal mb-4" data-testid="text-gallery-title">
-              Gallery
+              Portfolio
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
-              A glimpse into the relaxing atmosphere and therapeutic experience.
+              Explore our creative work — websites, videos, mockups, and more.
             </p>
             
             {getPaymentLinks().length > 0 && (
@@ -80,7 +80,7 @@ export default function Gallery() {
                 data-testid="button-tip"
               >
                 <Heart className="h-5 w-5 mr-2" />
-                Leave a Tip
+                Show Your Support
               </Button>
             )}
           </div>
@@ -108,7 +108,7 @@ export default function Gallery() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-muted-foreground">No gallery items yet.</p>
+              <p className="text-muted-foreground">No portfolio items yet.</p>
             </div>
           )}
         </div>
@@ -134,7 +134,7 @@ export default function Gallery() {
       <Dialog open={showTipDialog} onOpenChange={setShowTipDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Leave a Tip</DialogTitle>
+            <DialogTitle className="font-serif text-xl">Show Your Support</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 pt-4">
             <p className="text-sm text-muted-foreground mb-4">
@@ -148,7 +148,7 @@ export default function Gallery() {
                 onClick={() => window.open(link.url, "_blank")}
                 data-testid={`button-tip-${link.name.toLowerCase().replace(" ", "-")}`}
               >
-                <span>Tip with {link.name}</span>
+                <span>Support with {link.name}</span>
                 <ExternalLink className="h-4 w-4" />
               </Button>
             ))}

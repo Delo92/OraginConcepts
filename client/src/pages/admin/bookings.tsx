@@ -42,7 +42,7 @@ export default function AdminBookings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
-      toast({ title: "Success", description: "Booking status updated!" });
+      toast({ title: "Success", description: "Project status updated!" });
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -113,9 +113,9 @@ export default function AdminBookings() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-3xl font-normal mb-2" data-testid="text-admin-bookings-title">
-          Bookings
+          Projects
         </h1>
-        <p className="text-muted-foreground">View and manage all booking requests.</p>
+        <p className="text-muted-foreground">View and manage all project requests.</p>
       </div>
 
       <Card>
@@ -311,7 +311,7 @@ export default function AdminBookings() {
           ) : (
             <div className="p-12 text-center">
               <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No bookings yet. Bookings will appear here once clients start booking.</p>
+              <p className="text-muted-foreground">No projects yet. Projects will appear here once clients start requesting services.</p>
             </div>
           )}
         </CardContent>

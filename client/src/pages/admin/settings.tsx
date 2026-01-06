@@ -51,7 +51,7 @@ export default function AdminSettings() {
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues: {
-      businessName: "The Neitzke Way",
+      businessName: "Oraginal Concepts",
       tagline: "",
       aboutText: "",
       heroImageUrl: "",
@@ -70,7 +70,7 @@ export default function AdminSettings() {
   useEffect(() => {
     if (settings) {
       form.reset({
-        businessName: settings.businessName || "The Neitzke Way",
+        businessName: settings.businessName || "Oraginal Concepts",
         tagline: settings.tagline || "",
         aboutText: settings.aboutText || "",
         heroImageUrl: settings.heroImageUrl || "",
@@ -170,7 +170,7 @@ export default function AdminSettings() {
                     <FormLabel>Tagline</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Your journey to relaxation begins here..."
+                        placeholder="Give Me Your Concept, Let's Make It Real."
                         {...field}
                         data-testid="input-tagline"
                       />
@@ -189,7 +189,7 @@ export default function AdminSettings() {
                     <FormLabel>About Text</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Tell your clients about your practice..."
+                        placeholder="Tell your clients about your creative services..."
                         className="resize-none min-h-32"
                         {...field}
                         data-testid="input-about-text"
@@ -326,7 +326,7 @@ export default function AdminSettings() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="contact@theneitzekway.com"
+                        placeholder="contact@oraginalconcepts.com"
                         {...field}
                         data-testid="input-contact-email"
                       />
@@ -382,7 +382,7 @@ export default function AdminSettings() {
                     <FormLabel>Hours of Operation</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Mon - Sat: 9:00 AM - 7:00 PM"
+                        placeholder="Mon - Fri: 9:00 AM - 6:00 PM"
                         {...field}
                         data-testid="input-hours"
                       />
@@ -401,7 +401,7 @@ export default function AdminSettings() {
                     <FormLabel>Footer Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Experience the art of therapeutic massage..."
+                        placeholder="Give Me Your Concept, Let's Make It Real..."
                         className="resize-none"
                         {...field}
                         data-testid="input-footer-tagline"

@@ -32,9 +32,9 @@ interface AdminLayoutProps {
 const menuItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/services", label: "Services", icon: Package },
-  { href: "/admin/bookings", label: "Bookings", icon: Calendar },
+  { href: "/admin/bookings", label: "Projects", icon: Calendar },
   { href: "/admin/availability", label: "Availability", icon: Clock },
-  { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
+  { href: "/admin/gallery", label: "Portfolio", icon: ImageIcon },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -59,7 +59,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <SidebarHeader className="p-4 border-b border-sidebar-border">
             <Link href="/">
               <span className="font-serif text-lg font-medium cursor-pointer flex items-center gap-2" data-testid="link-admin-home">
-                The Neitzke Way
+                Oraginal Concepts
                 <ExternalLink className="h-3 w-3 opacity-50" />
               </span>
             </Link>
