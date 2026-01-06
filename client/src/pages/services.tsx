@@ -72,7 +72,7 @@ export default function Services() {
             Choose your preferred service and let's bring your concept to life. Your creative journey starts here.
           </p>
           <Link href="/book">
-            <Button size="lg" className="rounded-full px-8" data-testid="button-book-services-page">
+            <Button size="lg" className="btn-metallic rounded-full px-8" data-testid="button-book-services-page">
               Start Your Project
             </Button>
           </Link>

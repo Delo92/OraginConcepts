@@ -61,7 +61,7 @@ export function Navigation() {
             <ThemeToggle />
             <div className="hidden md:block">
               <Link href="/book">
-                <Button data-testid="button-book-now-nav">Start a Project</Button>
+                <Button className="btn-metallic" data-testid="button-book-now-nav">Start a Project</Button>
               </Link>
             </div>
             <Button
@@ -94,7 +94,7 @@ export function Navigation() {
                 </Link>
               ))}
               <Link href="/book">
-                <Button className="w-full mt-2" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="btn-metallic w-full mt-2" onClick={() => setMobileMenuOpen(false)}>
                   Start a Project
                 </Button>
               </Link>

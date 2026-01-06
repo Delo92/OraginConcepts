@@ -61,7 +61,7 @@ export function ServiceCard({ service, showBookButton = true }: ServiceCardProps
 
           {showBookButton && (
             <Link href={`/book?service=${service.id}`}>
-              <Button size="sm" data-testid={`button-book-service-${service.id}`}>
+              <Button size="sm" className="btn-metallic" data-testid={`button-book-service-${service.id}`}>
                 Get Started
               </Button>
             </Link>

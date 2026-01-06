@@ -60,7 +60,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Link href="/book">
-                <Button size="lg" className="rounded-full px-8 text-base font-medium" data-testid="button-book-hero">
+                <Button size="lg" className="btn-metallic rounded-full px-8 text-base" data-testid="button-book-hero">
                   Start Your Project
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -69,7 +69,7 @@ export default function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-full px-8 text-base font-medium"
+                  className="btn-metallic-outline rounded-full px-8 text-base"
                   data-testid="button-services-hero"
                 >
                   View Services
@@ -116,7 +116,7 @@ export default function Home() {
           {featuredServices.length > 0 && (
             <div className="text-center mt-12">
               <Link href="/services">
-                <Button variant="outline" className="rounded-full" data-testid="button-view-all-services">
+                <Button variant="outline" className="btn-metallic-outline rounded-full" data-testid="button-view-all-services">
                   View All Services
                 </Button>
               </Link>
@@ -177,7 +177,7 @@ export default function Home() {
               "At Oraginal Concepts, we believe every idea deserves to be brought to life. Whether you need a stunning website, captivating video content, visual mockups, or custom music production — we're here to turn your concept into reality. Give us your vision, and let's make it happen."}
           </p>
           <Link href="/book">
-            <Button size="lg" className="rounded-full px-8" data-testid="button-book-about">
+            <Button size="lg" className="btn-metallic rounded-full px-8" data-testid="button-book-about">
               Get Started Today
             </Button>
           </Link>

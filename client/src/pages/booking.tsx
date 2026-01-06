@@ -282,6 +282,7 @@ export default function Booking() {
 
               <div className="flex justify-end pt-4">
                 <Button
+                  className="btn-metallic"
                   onClick={() => setStep("datetime")}
                   disabled={!canProceedFromService}
                   data-testid="button-next-datetime"
@@ -344,6 +345,7 @@ export default function Booking() {
                   Back
                 </Button>
                 <Button
+                  className="btn-metallic"
                   onClick={() => setStep("info")}
                   disabled={!canProceedFromDateTime}
                   data-testid="button-next-info"
@@ -454,7 +456,7 @@ export default function Booking() {
                         <Button
                           key={link.name}
                           variant="outline"
-                          className="w-full justify-between"
+                          className="btn-metallic w-full justify-between"
                           onClick={() => window.open(link.url, "_blank")}
                           data-testid={`button-pay-${link.name.toLowerCase().replace(" ", "-")}`}
                         >
@@ -518,7 +520,7 @@ export default function Booking() {
                 </CardContent>
               </Card>
 
-              <Button onClick={() => setLocation("/")} data-testid="button-return-home">
+              <Button className="btn-metallic" onClick={() => setLocation("/")} data-testid="button-return-home">
                 Return to Home
               </Button>
             </div>

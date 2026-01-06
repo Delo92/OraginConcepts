@@ -124,7 +124,7 @@ export function BookingForm({ onSubmit, isSubmitting }: BookingFormProps) {
 
             <Button
               type="submit"
-              className="w-full"
+              className="btn-metallic w-full"
               disabled={isSubmitting}
               data-testid="button-submit-booking"
             >

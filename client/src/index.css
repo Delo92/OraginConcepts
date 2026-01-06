@@ -175,6 +175,76 @@
   }
 }
 
+@layer components {
+  .btn-metallic {
+    background: linear-gradient(
+      135deg,
+      #8B7355 0%,
+      #D4AF37 20%,
+      #FFD700 35%,
+      #F0E68C 50%,
+      #DAA520 65%,
+      #B8860B 80%,
+      #8B7355 100%
+    );
+    background-size: 200% 200%;
+    color: #1a1a1a;
+    font-weight: 600;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+    border: 1px solid #8B7355;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .btn-metallic:hover {
+    background-position: 100% 100%;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-metallic:active {
+    transform: translateY(0);
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-metallic-outline {
+    background: transparent;
+    color: #D4AF37;
+    font-weight: 600;
+    border: 2px solid;
+    border-image: linear-gradient(
+      135deg,
+      #8B7355 0%,
+      #D4AF37 25%,
+      #FFD700 50%,
+      #D4AF37 75%,
+      #8B7355 100%
+    ) 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .btn-metallic-outline:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(139, 115, 85, 0.2) 0%,
+      rgba(212, 175, 55, 0.2) 50%,
+      rgba(139, 115, 85, 0.2) 100%
+    );
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.
