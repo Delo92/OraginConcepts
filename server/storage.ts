@@ -1,0 +1,206 @@
+import {
+  services,
+  bookings,
+  availability,
+  blockedDates,
+  siteSettings,
+  galleryItems,
+  type Service,
+  type InsertService,
+  type Booking,
+  type InsertBooking,
+  type Availability,
+  type InsertAvailability,
+  type BlockedDate,
+  type InsertBlockedDate,
+  type SiteSettings,
+  type InsertSiteSettings,
+  type GalleryItem,
+  type InsertGalleryItem,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, lte } from "drizzle-orm";
+
+export interface IStorage {
+  getServices(): Promise<Service[]>;
+  getService(id: number): Promise<Service | undefined>;
+  createService(service: InsertService): Promise<Service>;
+  updateService(id: number, service: Partial<InsertService>): Promise<Service | undefined>;
+  deleteService(id: number): Promise<boolean>;
+
+  getBookings(): Promise<Booking[]>;
+  getBooking(id: number): Promise<Booking | undefined>;
+  getBookingsByDate(date: string): Promise<Booking[]>;
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  updateBooking(id: number, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
+  deleteBooking(id: number): Promise<boolean>;
+
+  getAvailability(): Promise<Availability[]>;
+  getAvailabilityByDay(dayOfWeek: number): Promise<Availability | undefined>;
+  createAvailability(avail: InsertAvailability): Promise<Availability>;
+  updateAvailability(id: number, avail: Partial<InsertAvailability>): Promise<Availability | undefined>;
+
+  getBlockedDates(): Promise<BlockedDate[]>;
+  getBlockedDate(date: string): Promise<BlockedDate | undefined>;
+  createBlockedDate(blocked: InsertBlockedDate): Promise<BlockedDate>;
+  deleteBlockedDate(id: number): Promise<boolean>;
+
+  getSettings(): Promise<SiteSettings | undefined>;
+  updateSettings(settings: Partial<InsertSiteSettings>): Promise<SiteSettings>;
+
+  getGalleryItems(): Promise<GalleryItem[]>;
+  getGalleryItem(id: number): Promise<GalleryItem | undefined>;
+  getHeroGalleryItem(): Promise<GalleryItem | undefined>;
+  createGalleryItem(item: InsertGalleryItem): Promise<GalleryItem>;
+  updateGalleryItem(id: number, item: Partial<InsertGalleryItem>): Promise<GalleryItem | undefined>;
+  deleteGalleryItem(id: number): Promise<boolean>;
+  setHeroGalleryItem(id: number): Promise<GalleryItem | undefined>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getServices(): Promise<Service[]> {
+    return db.select().from(services).orderBy(services.sortOrder);
+  }
+
+  async getService(id: number): Promise<Service | undefined> {
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service;
+  }
+
+  async createService(service: InsertService): Promise<Service> {
+    const [newService] = await db.insert(services).values(service).returning();
+    return newService;
+  }
+
+  async updateService(id: number, service: Partial<InsertService>): Promise<Service | undefined> {
+    const [updated] = await db.update(services).set(service).where(eq(services.id, id)).returning();
+    return updated;
+  }
+
+  async deleteService(id: number): Promise<boolean> {
+    const result = await db.delete(services).where(eq(services.id, id));
+    return true;
+  }
+
+  async getBookings(): Promise<Booking[]> {
+    return db.select().from(bookings).orderBy(bookings.createdAt);
+  }
+
+  async getBooking(id: number): Promise<Booking | undefined> {
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+    return booking;
+  }
+
+  async getBookingsByDate(date: string): Promise<Booking[]> {
+    return db.select().from(bookings).where(eq(bookings.bookingDate, date));
+  }
+
+  async createBooking(booking: InsertBooking): Promise<Booking> {
+    const [newBooking] = await db.insert(bookings).values(booking).returning();
+    return newBooking;
+  }
+
+  async updateBooking(id: number, booking: Partial<InsertBooking>): Promise<Booking | undefined> {
+    const [updated] = await db.update(bookings).set(booking).where(eq(bookings.id, id)).returning();
+    return updated;
+  }
+
+  async deleteBooking(id: number): Promise<boolean> {
+    await db.delete(bookings).where(eq(bookings.id, id));
+    return true;
+  }
+
+  async getAvailability(): Promise<Availability[]> {
+    return db.select().from(availability).orderBy(availability.dayOfWeek);
+  }
+
+  async getAvailabilityByDay(dayOfWeek: number): Promise<Availability | undefined> {
+    const [avail] = await db.select().from(availability).where(eq(availability.dayOfWeek, dayOfWeek));
+    return avail;
+  }
+
+  async createAvailability(avail: InsertAvailability): Promise<Availability> {
+    const [newAvail] = await db.insert(availability).values(avail).returning();
+    return newAvail;
+  }
+
+  async updateAvailability(id: number, avail: Partial<InsertAvailability>): Promise<Availability | undefined> {
+    const [updated] = await db.update(availability).set(avail).where(eq(availability.id, id)).returning();
+    return updated;
+  }
+
+  async getBlockedDates(): Promise<BlockedDate[]> {
+    return db.select().from(blockedDates).orderBy(blockedDates.date);
+  }
+
+  async getBlockedDate(date: string): Promise<BlockedDate | undefined> {
+    const [blocked] = await db.select().from(blockedDates).where(eq(blockedDates.date, date));
+    return blocked;
+  }
+
+  async createBlockedDate(blocked: InsertBlockedDate): Promise<BlockedDate> {
+    const [newBlocked] = await db.insert(blockedDates).values(blocked).returning();
+    return newBlocked;
+  }
+
+  async deleteBlockedDate(id: number): Promise<boolean> {
+    await db.delete(blockedDates).where(eq(blockedDates.id, id));
+    return true;
+  }
+
+  async getSettings(): Promise<SiteSettings | undefined> {
+    const [settings] = await db.select().from(siteSettings);
+    return settings;
+  }
+
+  async updateSettings(settings: Partial<InsertSiteSettings>): Promise<SiteSettings> {
+    const existing = await this.getSettings();
+    if (existing) {
+      const [updated] = await db.update(siteSettings).set(settings).where(eq(siteSettings.id, existing.id)).returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(siteSettings).values({
+        businessName: "The Neitzke Way",
+        ...settings,
+      }).returning();
+      return created;
+    }
+  }
+
+  async getGalleryItems(): Promise<GalleryItem[]> {
+    return db.select().from(galleryItems).orderBy(galleryItems.createdAt);
+  }
+
+  async getGalleryItem(id: number): Promise<GalleryItem | undefined> {
+    const [item] = await db.select().from(galleryItems).where(eq(galleryItems.id, id));
+    return item;
+  }
+
+  async getHeroGalleryItem(): Promise<GalleryItem | undefined> {
+    const [item] = await db.select().from(galleryItems).where(eq(galleryItems.isHero, true));
+    return item;
+  }
+
+  async createGalleryItem(item: InsertGalleryItem): Promise<GalleryItem> {
+    const [newItem] = await db.insert(galleryItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateGalleryItem(id: number, item: Partial<InsertGalleryItem>): Promise<GalleryItem | undefined> {
+    const [updated] = await db.update(galleryItems).set(item).where(eq(galleryItems.id, id)).returning();
+    return updated;
+  }
+
+  async deleteGalleryItem(id: number): Promise<boolean> {
+    await db.delete(galleryItems).where(eq(galleryItems.id, id));
+    return true;
+  }
+
+  async setHeroGalleryItem(id: number): Promise<GalleryItem | undefined> {
+    await db.update(galleryItems).set({ isHero: false }).where(eq(galleryItems.isHero, true));
+    const [updated] = await db.update(galleryItems).set({ isHero: true }).where(eq(galleryItems.id, id)).returning();
+    return updated;
+  }
+}
+
+export const storage = new DatabaseStorage();
