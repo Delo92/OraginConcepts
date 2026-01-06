@@ -1,41 +1,10 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
-/**
- * Register object storage routes for file uploads.
- *
- * This provides example routes for the presigned URL upload flow:
- * 1. POST /api/uploads/request-url - Get a presigned URL for uploading
- * 2. The client then uploads directly to the presigned URL
- *
- * IMPORTANT: These are example routes. Customize based on your use case:
- * - Add authentication middleware for protected uploads
- * - Add file metadata storage (save to database after upload)
- * - Add ACL policies for access control
- */
 export function registerObjectStorageRoutes(app: Express): void {
   const objectStorageService = new ObjectStorageService();
 
-  /**
-   * Request a presigned URL for file upload.
-   *
-   * Request body (JSON):
-   * {
-   *   "name": "filename.jpg",
-   *   "size": 12345,
-   *   "contentType": "image/jpeg"
-   * }
-   *
-   * Response:
-   * {
-   *   "uploadURL": "https://storage.googleapis.com/...",
-   *   "objectPath": "/objects/uploads/uuid"
-   * }
-   *
-   * IMPORTANT: The client should NOT send the file to this endpoint.
-   * Send JSON metadata only, then upload the file directly to uploadURL.
-   */
-  app.post("/api/uploads/request-url", async (req, res) => {
+  app.post("/api/uploads/request-url", async (req: Request, res: Response) => {
     try {
       const { name, size, contentType } = req.body;
 
@@ -45,35 +14,61 @@ export function registerObjectStorageRoutes(app: Express): void {
         });
       }
 
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-
-      // Extract object path from the presigned URL for later reference
-      const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
-
       res.json({
-        uploadURL,
-        objectPath,
-        // Echo back the metadata for client convenience
+        uploadURL: "/api/uploads/file",
+        objectPath: "pending",
+        useServerUpload: true,
         metadata: { name, size, contentType },
       });
     } catch (error) {
-      console.error("Error generating upload URL:", error);
+      console.error("Error generating upload info:", error);
       res.status(500).json({ error: "Failed to generate upload URL" });
     }
   });
 
-  /**
-   * Serve uploaded objects.
-   *
-   * GET /objects/:objectPath(*)
-   *
-   * This serves files from object storage. For public files, no auth needed.
-   * For protected files, add authentication middleware and ACL checks.
-   */
-  app.get("/objects/:objectPath(*)", async (req, res) => {
+  app.post("/api/uploads/file", async (req: Request, res: Response) => {
     try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
+      const chunks: Buffer[] = [];
+      
+      req.on('data', (chunk: Buffer) => {
+        chunks.push(chunk);
+      });
+
+      req.on('end', async () => {
+        try {
+          const fileBuffer = Buffer.concat(chunks);
+          const fileName = req.headers['x-file-name'] as string || 'upload';
+          const contentType = req.headers['content-type'] || 'application/octet-stream';
+          
+          const objectPath = await objectStorageService.uploadFile(fileBuffer, fileName, contentType);
+          
+          res.json({
+            objectPath,
+            metadata: { 
+              name: fileName, 
+              size: fileBuffer.length, 
+              contentType 
+            },
+          });
+        } catch (error) {
+          console.error("Error uploading file:", error);
+          res.status(500).json({ error: "Failed to upload file" });
+        }
+      });
+
+      req.on('error', (error) => {
+        console.error("Request error:", error);
+        res.status(500).json({ error: "Upload request failed" });
+      });
+    } catch (error) {
+      console.error("Error in upload handler:", error);
+      res.status(500).json({ error: "Failed to process upload" });
+    }
+  });
+
+  app.get("/objects/:objectPath(*)", async (req: Request, res: Response) => {
+    try {
+      await objectStorageService.downloadObjectToResponse(req.path, res);
     } catch (error) {
       console.error("Error serving object:", error);
       if (error instanceof ObjectNotFoundError) {
@@ -83,4 +78,3 @@ export function registerObjectStorageRoutes(app: Express): void {
     }
   });
 }
-
