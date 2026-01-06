@@ -84,7 +84,7 @@ export default function AdminBookings() {
       case "cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       case "completed":
-        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Completed</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Completed</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
