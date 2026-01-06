@@ -96,12 +96,25 @@ export default function Gallery() {
               {galleryItems.map((item) => (
                 <Card
                   key={item.id}
-                  className="overflow-hidden cursor-pointer hover-elevate"
+                  className="overflow-hidden cursor-pointer hover-elevate group"
                   onClick={() => setSelectedItem(item)}
                   data-testid={`card-gallery-item-${item.id}`}
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     {renderMedia(item)}
+                    {(item.title || item.projectUrl) && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {item.title && (
+                          <h3 className="text-white font-medium truncate">{item.title}</h3>
+                        )}
+                        {item.projectUrl && (
+                          <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
+                            <ExternalLink className="h-3 w-3" />
+                            <span className="truncate">Click to view details</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </Card>
               ))}
@@ -125,8 +138,32 @@ export default function Gallery() {
           >
             <X className="h-6 w-6" />
           </button>
-          <div className="flex items-center justify-center min-h-[50vh] p-4">
-            {selectedItem && renderMedia(selectedItem, true)}
+          <div className="flex flex-col">
+            <div className="flex items-center justify-center min-h-[50vh] p-4">
+              {selectedItem && renderMedia(selectedItem, true)}
+            </div>
+            {selectedItem && (selectedItem.title || selectedItem.description || selectedItem.projectUrl) && (
+              <div className="bg-black/80 p-6 text-white">
+                {selectedItem.title && (
+                  <h3 className="font-serif text-xl font-medium mb-2">{selectedItem.title}</h3>
+                )}
+                {selectedItem.description && (
+                  <p className="text-white/80 mb-4 whitespace-pre-wrap">{selectedItem.description}</p>
+                )}
+                {selectedItem.projectUrl && (
+                  <a
+                    href={selectedItem.projectUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Live Project
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

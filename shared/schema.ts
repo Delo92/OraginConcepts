@@ -115,6 +115,8 @@ export type SiteSettings = typeof siteSettings.$inferSelect;
 export const galleryItems = pgTable("gallery_items", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   title: text("title"),
+  description: text("description"),
+  projectUrl: text("project_url"),
   mediaUrl: text("media_url").notNull(),
   mediaType: text("media_type").notNull(),
   isHero: boolean("is_hero").default(false).notNull(),

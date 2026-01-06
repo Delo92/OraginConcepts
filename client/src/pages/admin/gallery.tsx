@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/hooks/use-upload";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +20,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, Star, ImageIcon, Film, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Plus, Trash2, Star, ImageIcon, Film, Loader2, Pencil } from "lucide-react";
 import type { GalleryItem } from "@shared/schema";
 
 export default function AdminGallery() {
   const { toast } = useToast();
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editItem, setEditItem] = useState<GalleryItem | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editProjectUrl, setEditProjectUrl] = useState("");
   const fileInputRef = useState<HTMLInputElement | null>(null);
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
@@ -97,6 +112,41 @@ export default function AdminGallery() {
       });
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: number; title?: string; description?: string; projectUrl?: string }) => {
+      const { id, ...updateData } = data;
+      return apiRequest("PUT", `/api/gallery/${id}`, updateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+      toast({ title: "Portfolio item updated" });
+      setEditItem(null);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to update portfolio item",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditClick = (item: GalleryItem) => {
+    setEditItem(item);
+    setEditTitle(item.title || "");
+    setEditDescription(item.description || "");
+    setEditProjectUrl(item.projectUrl || "");
+  };
+
+  const handleEditSave = () => {
+    if (!editItem) return;
+    updateMutation.mutate({
+      id: editItem.id,
+      title: editTitle || undefined,
+      description: editDescription || undefined,
+      projectUrl: editProjectUrl || undefined,
+    });
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -224,6 +274,14 @@ export default function AdminGallery() {
                       )}
                     </div>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => handleEditClick(item)}
+                        data-testid={`button-edit-${item.id}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       {!item.isHero && (
                         <Button
                           size="sm"
@@ -286,6 +344,66 @@ export default function AdminGallery() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={editItem !== null} onOpenChange={(open) => !open && setEditItem(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Portfolio Item</DialogTitle>
+            <DialogDescription>
+              Add details about this project. Include a link so visitors can see your live work.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Project title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Describe what you created and the technologies used..."
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-url">Project URL</Label>
+              <Input
+                id="edit-url"
+                value={editProjectUrl}
+                onChange={(e) => setEditProjectUrl(e.target.value)}
+                placeholder="https://example.com"
+                type="url"
+              />
+              <p className="text-xs text-muted-foreground">
+                Add a link so visitors can view the live project
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
