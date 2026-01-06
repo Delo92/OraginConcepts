@@ -47,38 +47,37 @@ export default function Home() {
             style={{ backgroundImage: `url(${heroImage})` }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
-        
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-light text-white mb-6 leading-tight" data-testid="text-hero-title">
-            {settings?.businessName || "Oraginal Concepts"}
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed font-light" data-testid="text-hero-tagline">
-            {settings?.tagline || "Give Me Your Concept, Let's Make It Real."}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/book">
-              <Button size="lg" className="rounded-full px-8 text-base font-medium" data-testid="button-book-hero">
-                Start Your Project
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/services">
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full px-8 text-base font-medium bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20"
-                data-testid="button-services-hero"
-              >
-                View Services
-              </Button>
-            </Link>
-          </div>
-        </div>
       </section>
 
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-light mb-6 leading-tight" data-testid="text-hero-title">
+              {settings?.businessName || "Oraginal Concepts"}
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed font-light" data-testid="text-hero-tagline">
+              {settings?.tagline || "Give Me Your Concept, Let's Make It Real."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+              <Link href="/book">
+                <Button size="lg" className="rounded-full px-8 text-base font-medium" data-testid="button-book-hero">
+                  Start Your Project
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/services">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-8 text-base font-medium"
+                  data-testid="button-services-hero"
+                >
+                  View Services
+                </Button>
+              </Link>
+            </div>
+          </div>
+
           <div className="text-center mb-16">
             <h2 className="font-serif text-3xl md:text-4xl font-normal mb-4" data-testid="text-services-heading">
               Our Services
