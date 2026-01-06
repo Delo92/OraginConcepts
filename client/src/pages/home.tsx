@@ -43,7 +43,7 @@ export default function Home() {
           />
         ) : (
           <div
-            className="absolute inset-0 bg-cover bg-center"
+            className="absolute inset-0 bg-contain bg-center bg-no-repeat bg-black"
             style={{ backgroundImage: `url(${heroImage})` }}
           />
         )}
