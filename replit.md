@@ -42,7 +42,22 @@ Preferred communication style: Simple, everyday language.
 - **BlockedDates**: Specific dates marked as unavailable
 - **SiteSettings**: Business configuration (name, tagline, contact info, payment links)
 - **GalleryItems**: Portfolio items (images/videos) showcasing completed work
+- **DisplayModeSettings**: Per-mode appearance settings for Yin/Yang theming (hero, fonts, colors)
 - **Users/Sessions**: Authentication tables for Replit Auth
+
+### Yin/Yang Theming System
+The site features a dual-mode theming system accessible via toggle in the navigation:
+- **Yin (☀️)**: Light, professional theme - clean aesthetics for business clients
+- **Yang (🌙)**: Dark, edgy theme - bold aesthetics for creative/alternative audiences
+
+Each mode can have independent:
+- Hero image selection from portfolio
+- Typography (heading and body fonts from curated Google Fonts list)
+- Color scheme (background, surface, accent, text colors)
+- Mode-specific tagline
+
+Settings are managed in Admin > Settings > Yin/Yang Appearance section.
+User's mode preference persists in localStorage across sessions.
 
 ### Project Structure
 ```

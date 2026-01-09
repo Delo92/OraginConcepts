@@ -60,7 +60,19 @@ function loadGoogleFont(fontName: string) {
 }
 
 export function DisplayModeProvider({ children }: { children: ReactNode }) {
-  const [displayMode, setDisplayMode] = useState<DisplayMode>("professional");
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("displayMode");
+      if (saved === "professional" || saved === "edge") {
+        return saved;
+      }
+    }
+    return "professional";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("displayMode", displayMode);
+  }, [displayMode]);
 
   const { data: allSettings, isLoading: isLoadingSettings } = useQuery<DisplayModeSettings[]>({
     queryKey: ["/api/display-mode-settings"],
