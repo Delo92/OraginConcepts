@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Save } from "lucide-react";
 import type { Availability, BlockedDate } from "@shared/schema";
+
+type LocalSchedule = {
+  [dayOfWeek: number]: {
+    id?: number;
+    isAvailable: boolean;
+    startTime: string;
+    endTime: string;
+  };
+};
 
 const DAYS_OF_WEEK = [
   "Sunday",
@@ -35,6 +44,8 @@ export default function AdminAvailability() {
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [selectedBlockDate, setSelectedBlockDate] = useState<Date | undefined>();
   const [blockReason, setBlockReason] = useState("");
+  const [localSchedule, setLocalSchedule] = useState<LocalSchedule>({});
+  const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
 
   const { data: availability, isLoading: availabilityLoading } = useQuery<Availability[]>({
@@ -45,6 +56,23 @@ export default function AdminAvailability() {
     queryKey: ["/api/blocked-dates"],
   });
 
+  useEffect(() => {
+    if (availability) {
+      const schedule: LocalSchedule = {};
+      for (let i = 0; i < 7; i++) {
+        const dayData = availability.find((a) => a.dayOfWeek === i);
+        schedule[i] = {
+          id: dayData?.id,
+          isAvailable: dayData?.isAvailable ?? false,
+          startTime: dayData?.startTime ?? "09:00",
+          endTime: dayData?.endTime ?? "17:00",
+        };
+      }
+      setLocalSchedule(schedule);
+      setHasChanges(false);
+    }
+  }, [availability]);
+
   const updateAvailabilityMutation = useMutation({
     mutationFn: async (data: Partial<Availability> & { id?: number; dayOfWeek: number }) => {
       if (data.id) {
@@ -54,10 +82,6 @@ export default function AdminAvailability() {
         const res = await apiRequest("POST", "/api/availability", data);
         return res.json();
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
-      toast({ title: "Success", description: "Availability updated!" });
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -94,36 +118,48 @@ export default function AdminAvailability() {
     },
   });
 
-  const getAvailabilityForDay = (dayOfWeek: number) => {
-    return availability?.find((a) => a.dayOfWeek === dayOfWeek);
-  };
-
   const handleToggleDay = (dayOfWeek: number, isAvailable: boolean) => {
-    const existing = getAvailabilityForDay(dayOfWeek);
-    if (existing) {
-      updateAvailabilityMutation.mutate({
-        id: existing.id,
-        dayOfWeek,
+    setLocalSchedule((prev) => ({
+      ...prev,
+      [dayOfWeek]: {
+        ...prev[dayOfWeek],
         isAvailable,
-      });
-    } else {
-      updateAvailabilityMutation.mutate({
-        dayOfWeek,
-        startTime: "09:00",
-        endTime: "17:00",
-        isAvailable,
-      });
-    }
+        startTime: prev[dayOfWeek]?.startTime ?? "09:00",
+        endTime: prev[dayOfWeek]?.endTime ?? "17:00",
+      },
+    }));
+    setHasChanges(true);
   };
 
   const handleUpdateTime = (dayOfWeek: number, field: "startTime" | "endTime", value: string) => {
-    const existing = getAvailabilityForDay(dayOfWeek);
-    if (existing) {
-      updateAvailabilityMutation.mutate({
-        id: existing.id,
-        dayOfWeek,
+    setLocalSchedule((prev) => ({
+      ...prev,
+      [dayOfWeek]: {
+        ...prev[dayOfWeek],
         [field]: value,
+      },
+    }));
+    setHasChanges(true);
+  };
+
+  const handleSaveSchedule = async () => {
+    const promises = Object.entries(localSchedule).map(([day, data]) => {
+      const dayOfWeek = parseInt(day);
+      return updateAvailabilityMutation.mutateAsync({
+        id: data.id,
+        dayOfWeek,
+        isAvailable: data.isAvailable,
+        startTime: data.startTime,
+        endTime: data.endTime,
       });
+    });
+
+    try {
+      await Promise.all(promises);
+      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({ title: "Success", description: "Schedule saved!" });
+      setHasChanges(false);
+    } catch (error) {
     }
   };
 
@@ -147,8 +183,18 @@ export default function AdminAvailability() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
             <CardTitle className="font-serif text-lg">Weekly Schedule</CardTitle>
+            {hasChanges && (
+              <Button
+                size="sm"
+                onClick={handleSaveSchedule}
+                disabled={updateAvailabilityMutation.isPending}
+              >
+                <Save className="h-4 w-4 mr-1" />
+                {updateAvailabilityMutation.isPending ? "Saving..." : "Save Schedule"}
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {availabilityLoading ? (
@@ -163,8 +209,8 @@ export default function AdminAvailability() {
             ) : (
               <div className="space-y-4">
                 {DAYS_OF_WEEK.map((day, index) => {
-                  const dayAvailability = getAvailabilityForDay(index);
-                  const isAvailable = dayAvailability?.isAvailable ?? false;
+                  const dayData = localSchedule[index];
+                  const isAvailable = dayData?.isAvailable ?? false;
 
                   return (
                     <div
@@ -182,11 +228,11 @@ export default function AdminAvailability() {
                           {day}
                         </span>
                       </div>
-                      {isAvailable && dayAvailability && (
+                      {isAvailable && dayData && (
                         <div className="flex items-center gap-2">
                           <Input
                             type="time"
-                            value={dayAvailability.startTime}
+                            value={dayData.startTime}
                             onChange={(e) => handleUpdateTime(index, "startTime", e.target.value)}
                             className="w-32"
                             data-testid={`input-start-${index}`}
@@ -194,7 +240,7 @@ export default function AdminAvailability() {
                           <span className="text-muted-foreground">to</span>
                           <Input
                             type="time"
-                            value={dayAvailability.endTime}
+                            value={dayData.endTime}
                             onChange={(e) => handleUpdateTime(index, "endTime", e.target.value)}
                             className="w-32"
                             data-testid={`input-end-${index}`}
