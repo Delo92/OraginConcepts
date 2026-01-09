@@ -1,6 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, cp, access } from "fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -59,6 +59,15 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  // Copy media folder if it exists
+  try {
+    await access("public/media");
+    await cp("public/media", "dist/public/media", { recursive: true });
+    console.log("copied media files to dist/public/media");
+  } catch {
+    console.log("no media folder to copy");
+  }
 }
 
 buildAll().catch((err) => {

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { services, availability, siteSettings } from "@shared/schema";
+import { services, availability, siteSettings, galleryItems } from "@shared/schema";
 
 export async function seedDatabaseIfEmpty() {
   try {
@@ -78,6 +78,58 @@ export async function seedDatabaseIfEmpty() {
       address: "4522 Nw 16th st",
       footerTagline: "Give Me Your Concept, Let's Make It Real. Websites, videos, mockups, music — we bring your ideas to life."
     });
+
+    const galleryData = [
+      {
+        title: "The Oraginal Concept",
+        mediaUrl: "/media/oraginal-concept.mp4",
+        mediaType: "video",
+        isHero: true,
+        description: "'The Oragin' the oraginal gamer. spelled wrong on purpose a young 12yr old Mr. Johnson wanted to beat other people in games and other means and it annoy the defeated or loser that Origin is spelled wrong.",
+        projectUrl: "OraginConcept.com",
+        displayMode: "both"
+      },
+      {
+        title: "Chronic Docs",
+        mediaUrl: "/media/chronic-docs.png",
+        mediaType: "image",
+        isHero: false,
+        description: "The Nations Premier medical cannabis recommendation service, wanted a website that could could house patients, doctors, agents or representatives to handle patients, admin for customer and agent management and owner for brand and analytics all in one closed house, with full GA4 tracking built in, with GoHighLevel integration ready and in use.",
+        projectUrl: "ChronicDocs.com",
+        displayMode: "professional"
+      },
+      {
+        title: "Sacred Wellness Association",
+        mediaUrl: "/media/sacred-wellness.png",
+        mediaType: "image",
+        isHero: false,
+        description: "A company striving to get your wellness underway, from diet plans, to meal prep, to GLP-! and other means of weight loss and wellness.",
+        projectUrl: "sacredwellnessassociation.com",
+        displayMode: "professional"
+      },
+      {
+        title: "Chronic Brands USA",
+        mediaUrl: "/media/chronic-brands.png",
+        mediaType: "image",
+        isHero: false,
+        description: "One of the nations most exclusive Cannabis friendly spaces and community in the nation, founded by a couple based out of OKC, self made local moguls. Music, modeling, growing, networking, event throwing, event hosting, from NYC to Hawaii there's no where in the Cannabis culture or community you wont find them.",
+        projectUrl: "Chronicbrandsusa.com",
+        displayMode: "edge"
+      },
+      {
+        title: "Chronic TV",
+        mediaUrl: "/media/chronic-tv.png",
+        mediaType: "image",
+        isHero: false,
+        description: "The community that Chronic Brands strives to build lives on Chronic TV. with a 24/7 live broadcast with dedicated time slots, on demand video of any show or series that is on Chronic TV, including the Originals series, and any member of the community that chooses to have a unfiltered show that no mainstream media platform can take down.",
+        projectUrl: "https://chronicbrandsusa.com/chronic-tv",
+        displayMode: "edge"
+      },
+    ];
+
+    for (const item of galleryData) {
+      await db.insert(galleryItems).values(item);
+    }
 
     console.log("Database seeded successfully!");
   } catch (error) {

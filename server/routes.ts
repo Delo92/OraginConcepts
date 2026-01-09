@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import express from "express";
+import path from "path";
 import {
   insertServiceSchema,
   insertBookingSchema,
@@ -362,6 +364,9 @@ export async function registerRoutes(
   });
 
   registerObjectStorageRoutes(app);
+
+  // Serve static media files
+  app.use("/media", express.static(path.join(process.cwd(), "public/media")));
 
   await seedDatabaseIfEmpty();
 
