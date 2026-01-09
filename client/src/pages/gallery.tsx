@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Card } from "@/components/ui/card";
@@ -10,12 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Heart, ExternalLink, X } from "lucide-react";
+import { Heart, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import type { GalleryItem, SiteSettings } from "@shared/schema";
 
 export default function Gallery() {
-  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [showTipDialog, setShowTipDialog] = useState(false);
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
@@ -94,29 +94,25 @@ export default function Gallery() {
           ) : galleryItems && galleryItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {galleryItems.map((item) => (
-                <Card
-                  key={item.id}
-                  className="overflow-hidden cursor-pointer hover-elevate group"
-                  onClick={() => setSelectedItem(item)}
-                  data-testid={`card-gallery-item-${item.id}`}
-                >
-                  <div className="aspect-square overflow-hidden relative">
-                    {renderMedia(item)}
-                    {(item.title || item.projectUrl) && (
+                <Link href={`/projects/${item.id}`} key={item.id}>
+                  <Card
+                    className="overflow-hidden cursor-pointer hover-elevate group"
+                    data-testid={`card-gallery-item-${item.id}`}
+                  >
+                    <div className="aspect-square overflow-hidden relative">
+                      {renderMedia(item)}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {item.title && (
-                          <h3 className="text-white font-medium truncate">{item.title}</h3>
-                        )}
-                        {item.projectUrl && (
-                          <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
-                            <ExternalLink className="h-3 w-3" />
-                            <span className="truncate">Click to view details</span>
-                          </p>
-                        )}
+                        <h3 className="text-white font-medium truncate">
+                          {item.title || "View Project"}
+                        </h3>
+                        <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
+                          <ExternalLink className="h-3 w-3" />
+                          <span className="truncate">Click to view details</span>
+                        </p>
                       </div>
-                    )}
-                  </div>
-                </Card>
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </div>
           ) : (
@@ -128,45 +124,6 @@ export default function Gallery() {
       </main>
 
       <Footer />
-
-      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/95">
-          <button
-            onClick={() => setSelectedItem(null)}
-            className="absolute top-4 right-4 z-10 text-white/80 hover:text-white"
-            data-testid="button-close-modal"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <div className="flex flex-col">
-            <div className="flex items-center justify-center min-h-[50vh] p-4">
-              {selectedItem && renderMedia(selectedItem, true)}
-            </div>
-            {selectedItem && (selectedItem.title || selectedItem.description || selectedItem.projectUrl) && (
-              <div className="bg-black/80 p-6 text-white">
-                {selectedItem.title && (
-                  <h3 className="font-serif text-xl font-medium mb-2">{selectedItem.title}</h3>
-                )}
-                {selectedItem.description && (
-                  <p className="text-white/80 mb-4 whitespace-pre-wrap">{selectedItem.description}</p>
-                )}
-                {selectedItem.projectUrl && (
-                  <a
-                    href={selectedItem.projectUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    View Live Project
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={showTipDialog} onOpenChange={setShowTipDialog}>
         <DialogContent>
