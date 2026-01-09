@@ -11,16 +11,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Heart, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { Heart, ExternalLink, Sun, Moon } from "lucide-react";
+import { useState, useMemo } from "react";
 import type { GalleryItem, SiteSettings } from "@shared/schema";
+
+type DisplayMode = "professional" | "edge";
 
 export default function Gallery() {
   const [showTipDialog, setShowTipDialog] = useState(false);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("professional");
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
     queryKey: ["/api/gallery"],
   });
+
+  const filteredItems = useMemo(() => {
+    if (!galleryItems) return [];
+    return galleryItems.filter(
+      (item) => item.displayMode === displayMode || item.displayMode === "both"
+    );
+  }, [galleryItems, displayMode]);
 
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/settings"],
@@ -68,9 +78,38 @@ export default function Gallery() {
             <h1 className="font-serif text-4xl md:text-5xl font-normal mb-4" data-testid="text-gallery-title">
               Portfolio
             </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
               Explore our creative work — websites, videos, mockups, and more.
             </p>
+            
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <Button
+                size="lg"
+                variant={displayMode === "professional" ? "default" : "outline"}
+                onClick={() => setDisplayMode("professional")}
+                className={`rounded-full px-6 transition-all ${
+                  displayMode === "professional" 
+                    ? "bg-gradient-to-r from-amber-100 to-amber-50 text-amber-900 hover:from-amber-200 hover:to-amber-100 border-amber-300" 
+                    : ""
+                }`}
+              >
+                <Sun className="h-5 w-5 mr-2" />
+                Professional
+              </Button>
+              <Button
+                size="lg"
+                variant={displayMode === "edge" ? "default" : "outline"}
+                onClick={() => setDisplayMode("edge")}
+                className={`rounded-full px-6 transition-all ${
+                  displayMode === "edge" 
+                    ? "bg-gradient-to-r from-slate-800 to-slate-900 text-slate-100 hover:from-slate-700 hover:to-slate-800" 
+                    : ""
+                }`}
+              >
+                <Moon className="h-5 w-5 mr-2" />
+                Edge
+              </Button>
+            </div>
             
             {getPaymentLinks().length > 0 && (
               <Button
@@ -91,9 +130,9 @@ export default function Gallery() {
                 <Skeleton key={i} className="aspect-square rounded-lg" />
               ))}
             </div>
-          ) : galleryItems && galleryItems.length > 0 ? (
+          ) : filteredItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {galleryItems.map((item) => (
+              {filteredItems.map((item) => (
                 <Link href={`/projects/${item.id}`} key={item.id}>
                   <Card
                     className="overflow-hidden cursor-pointer hover-elevate group"
@@ -117,7 +156,19 @@ export default function Gallery() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-muted-foreground">No portfolio items yet.</p>
+              <div className="mb-4">
+                {displayMode === "professional" ? (
+                  <Sun className="h-12 w-12 text-muted-foreground/50 mx-auto" />
+                ) : (
+                  <Moon className="h-12 w-12 text-muted-foreground/50 mx-auto" />
+                )}
+              </div>
+              <p className="text-muted-foreground">
+                No {displayMode === "professional" ? "professional" : "edge"} projects yet.
+              </p>
+              <p className="text-muted-foreground/70 text-sm mt-2">
+                Try switching to the other view to see more work.
+              </p>
             </div>
           )}
         </div>

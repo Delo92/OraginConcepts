@@ -29,7 +29,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Trash2, Star, ImageIcon, Film, Loader2, Pencil, FolderOpen } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, Star, ImageIcon, Film, Loader2, Pencil, FolderOpen, Sun, Moon, Users } from "lucide-react";
 import type { GalleryItem } from "@shared/schema";
 
 export default function AdminGallery() {
@@ -39,6 +46,7 @@ export default function AdminGallery() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editProjectUrl, setEditProjectUrl] = useState("");
+  const [editDisplayMode, setEditDisplayMode] = useState("both");
   const fileInputRef = useState<HTMLInputElement | null>(null);
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
@@ -115,7 +123,7 @@ export default function AdminGallery() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: { id: number; title?: string; description?: string; projectUrl?: string }) => {
+    mutationFn: async (data: { id: number; title?: string; description?: string; projectUrl?: string; displayMode?: string }) => {
       const { id, ...updateData } = data;
       return apiRequest("PUT", `/api/gallery/${id}`, updateData);
     },
@@ -137,6 +145,7 @@ export default function AdminGallery() {
     setEditTitle(item.title || "");
     setEditDescription(item.description || "");
     setEditProjectUrl(item.projectUrl || "");
+    setEditDisplayMode(item.displayMode || "both");
   };
 
   const handleEditSave = () => {
@@ -146,6 +155,7 @@ export default function AdminGallery() {
       title: editTitle || undefined,
       description: editDescription || undefined,
       projectUrl: editProjectUrl || undefined,
+      displayMode: editDisplayMode,
     });
   };
 
@@ -394,6 +404,37 @@ export default function AdminGallery() {
               />
               <p className="text-xs text-muted-foreground">
                 Add a link so visitors can view the live project
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Display Mode</Label>
+              <Select value={editDisplayMode} onValueChange={setEditDisplayMode}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="professional">
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" />
+                      <span>Professional (Light)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="edge">
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-4 w-4" />
+                      <span>Edge (Dark)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="both">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>Both Modes</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose which portfolio view this project appears in
               </p>
             </div>
           </div>

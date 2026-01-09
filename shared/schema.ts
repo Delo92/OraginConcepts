@@ -119,6 +119,7 @@ export const galleryItems = pgTable("gallery_items", {
   projectUrl: text("project_url"),
   mediaUrl: text("media_url").notNull(),
   mediaType: text("media_type").notNull(),
+  displayMode: text("display_mode").notNull().default("both"),
   isHero: boolean("is_hero").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
