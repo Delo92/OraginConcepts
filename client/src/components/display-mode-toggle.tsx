@@ -11,7 +11,7 @@ export function DisplayModeToggle() {
       size="icon"
       onClick={toggleDisplayMode}
       className="relative overflow-hidden"
-      title={displayMode === "professional" ? "Switch to Edge view" : "Switch to Professional view"}
+      title={displayMode === "professional" ? "Switch to Yang" : "Switch to Yin"}
     >
       <div className="absolute inset-0 rounded-md animate-pulse-ring" />
       {displayMode === "professional" ? (

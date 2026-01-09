@@ -368,13 +368,13 @@ export default function AdminServices() {
                           <SelectItem value="professional">
                             <div className="flex items-center gap-2">
                               <Sun className="h-4 w-4" />
-                              <span>Professional (Light)</span>
+                              <span>Yin (Light)</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="edge">
                             <div className="flex items-center gap-2">
                               <Moon className="h-4 w-4" />
-                              <span>Edge (Dark)</span>
+                              <span>Yang (Dark)</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="both">
