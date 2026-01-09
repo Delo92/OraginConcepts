@@ -5,13 +5,18 @@ if (!process.env.DATABASE_URL) {
 }
 
 const isProduction = process.env.NODE_ENV === "production";
+let dbUrl = process.env.DATABASE_URL;
+
+// Add SSL mode for production databases (Render, etc.)
+if (isProduction && !dbUrl.includes("sslmode=")) {
+  dbUrl += dbUrl.includes("?") ? "&sslmode=require" : "?sslmode=require";
+}
 
 export default defineConfig({
   out: "./migrations",
   schema: "./shared/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
-    ssl: isProduction ? { rejectUnauthorized: false } : false,
+    url: dbUrl,
   },
 });
