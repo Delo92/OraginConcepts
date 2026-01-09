@@ -19,6 +19,7 @@ import {
 import { encrypt, decrypt, isEncryptionKeySet } from "./encryption";
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { seedDatabaseIfEmpty } from "./seed";
 
 declare module "express-session" {
   interface SessionData {
@@ -361,6 +362,8 @@ export async function registerRoutes(
   });
 
   registerObjectStorageRoutes(app);
+
+  await seedDatabaseIfEmpty();
 
   app.get("/api/gallery", async (req, res) => {
     try {
