@@ -40,10 +40,20 @@ Preferred communication style: Simple, everyday language.
 - **Bookings**: Client project requests with date, time, service, and client contact info
 - **Availability**: Weekly schedule defining available time slots per day
 - **BlockedDates**: Specific dates marked as unavailable
-- **SiteSettings**: Business configuration (name, tagline, contact info, payment links)
+- **SiteSettings**: Business configuration (name, tagline, contact info)
+- **PaymentMethods**: Dynamic payment provider configuration with encrypted API credentials
 - **GalleryItems**: Portfolio items (images/videos) showcasing completed work
 - **DisplayModeSettings**: Per-mode appearance settings for Yin/Yang theming (hero, fonts, colors)
 - **Users/Sessions**: Authentication tables for Replit Auth
+
+### Dynamic Payment Methods System
+The site supports multiple payment providers that can be configured per-deployment:
+- **Link-based providers**: Cash App, Venmo, Chime, Apple Pay (store payment URLs)
+- **API-based providers**: Stripe, PayPal, Authorize.net, Shopify (store encrypted API credentials)
+
+Payment credentials are encrypted using AES-256-GCM via Node.js crypto library. Each deployment requires a unique `ENCRYPTION_KEY` secret.
+
+**For client deployments**: See `CLIENT_SETUP.md` for complete setup instructions.
 
 ### Yin/Yang Theming System
 The site features a dual-mode theming system accessible via toggle in the navigation:
