@@ -8,8 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Lightbulb, Palette, Zap } from "lucide-react";
 import type { Service, SiteSettings, GalleryItem } from "@shared/schema";
+import { useDisplayMode } from "@/contexts/display-mode-context";
 
 export default function Home() {
+  const { displayMode, modeSettings } = useDisplayMode();
+
   const { data: services, isLoading: servicesLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
@@ -18,12 +21,23 @@ export default function Home() {
     queryKey: ["/api/settings"],
   });
 
-  const { data: heroItem } = useQuery<GalleryItem | null>({
+  const { data: defaultHeroItem } = useQuery<GalleryItem | null>({
     queryKey: ["/api/gallery/hero"],
   });
 
+  const { data: galleryItems } = useQuery<GalleryItem[]>({
+    queryKey: ["/api/gallery"],
+  });
+
+  const modeHeroItem = modeSettings?.heroItemId 
+    ? galleryItems?.find(item => item.id === modeSettings.heroItemId)
+    : null;
+  
+  const heroItem = modeHeroItem || defaultHeroItem;
   const heroImage = heroItem?.mediaUrl || "/logo.jpg";
   const isHeroVideo = heroItem?.mediaType === "video";
+  
+  const displayTagline = modeSettings?.tagline || settings?.tagline || "Give Me Your Concept, Let's Make It Real.";
 
   const featuredServices = services?.filter(s => s.isActive).slice(0, 3) || [];
 
@@ -56,7 +70,7 @@ export default function Home() {
               {settings?.businessName || "Oraginal Concepts"}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed font-light" data-testid="text-hero-tagline">
-              {settings?.tagline || "Give Me Your Concept, Let's Make It Real."}
+              {displayTagline}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Link href="/book">
