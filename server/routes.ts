@@ -11,6 +11,8 @@ import {
   insertSiteSettingsSchema,
   insertGalleryItemSchema,
   insertPortfolioMediaSchema,
+  insertDisplayModeSettingsSchema,
+  AVAILABLE_FONTS,
 } from "@shared/schema";
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
@@ -516,6 +518,53 @@ export async function registerRoutes(
       console.error("Error reordering portfolio media:", error);
       res.status(500).json({ message: "Failed to reorder portfolio media" });
     }
+  });
+
+  // Display Mode Settings API
+  app.get("/api/display-mode-settings", async (req, res) => {
+    try {
+      const allSettings = await storage.getAllDisplayModeSettings();
+      res.json(allSettings);
+    } catch (error) {
+      console.error("Error fetching display mode settings:", error);
+      res.status(500).json({ message: "Failed to fetch display mode settings" });
+    }
+  });
+
+  app.get("/api/display-mode-settings/:mode", async (req, res) => {
+    try {
+      const { mode } = req.params;
+      const settings = await storage.getDisplayModeSettings(mode);
+      if (!settings) {
+        return res.status(404).json({ message: "Settings not found for this mode" });
+      }
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching display mode settings:", error);
+      res.status(500).json({ message: "Failed to fetch display mode settings" });
+    }
+  });
+
+  app.put("/api/display-mode-settings/:mode", isAdminAuthenticated, async (req, res) => {
+    try {
+      const { mode } = req.params;
+      if (mode !== "professional" && mode !== "edge") {
+        return res.status(400).json({ message: "Mode must be 'professional' or 'edge'" });
+      }
+      const data = insertDisplayModeSettingsSchema.partial().parse(req.body);
+      const settings = await storage.upsertDisplayModeSettings(mode, data);
+      res.json(settings);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating display mode settings:", error);
+      res.status(500).json({ message: "Failed to update display mode settings" });
+    }
+  });
+
+  app.get("/api/available-fonts", (req, res) => {
+    res.json(AVAILABLE_FONTS);
   });
 
   return httpServer;
