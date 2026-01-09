@@ -1,0 +1,107 @@
+It looks like we don't have access to your repo, but we'll try to clone it anyway.
+==> Cloning from https://github.com/Delo92/OraginConcepts
+==> Checking out commit 915492a2060162f73a3a39bc70cd7ab99a10f84f in branch main
+==> Requesting Node.js version 20.x
+==> Using Node.js version 20.19.6 via /opt/render/project/src/package.json
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Running build command 'npm install; npm run build'...
+added 643 packages, and audited 644 packages in 16s
+91 packages are looking for funding
+  run `npm fund` for details
+4 high severity vulnerabilities
+To address all issues, run:
+  npm audit fix
+Run `npm audit` for details.
+> oraginal-concepts@1.0.0 build
+> tsx script/build.ts
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2692 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                   1.34 kB │ gzip:   0.65 kB
+../dist/public/assets/index-BWMQojXG.css   83.02 kB │ gzip:  13.51 kB
+../dist/public/assets/index-tlWljVPw.js   697.34 kB │ gzip: 202.84 kB
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 10.10s
+building server...
+  dist/index.cjs  1.1mb ⚠️
+⚡ Done in 469ms
+==> Uploading build...
+==> Uploaded in 9.9s. Compression took 5.7s
+==> Build successful 🎉
+==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+==> Deploying...
+==> Running 'npm run start'
+> oraginal-concepts@1.0.0 start
+> NODE_ENV=production node dist/index.cjs
+6:55:46 AM [express] serving on port 10000
+node:internal/deps/undici/undici:14900
+      Error.captureStackTrace(err);
+            ^
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getDefaultBucketId (/opt/render/project/src/node_modules/@replit/object-storage/dist/index.js:87:20)
+    at async Client.init (/opt/render/project/src/node_modules/@replit/object-storage/dist/index.js:124:51) {
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:1106
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 1106
+  }
+}
+Node.js v20.19.6
+==> Exited with status 1
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+==> Running 'npm run start'
+> oraginal-concepts@1.0.0 start
+> NODE_ENV=production node dist/index.cjs
+6:55:54 AM [express] serving on port 10000
+node:internal/deps/undici/undici:14900
+      Error.captureStackTrace(err);
+            ^
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getDefaultBucketId (/opt/render/project/src/node_modules/@replit/object-storage/dist/index.js:87:20)
+    at async Client.init (/opt/render/project/src/node_modules/@replit/object-storage/dist/index.js:124:51) {
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:1106
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 1106
+  }
+}
+Node.js v20.19.6
+==> Running 'npm run start'
+> oraginal-concepts@1.0.0 start
+> NODE_ENV=production node dist/index.cjs
+6:56:07 AM [express] serving on port 10000
+node:internal/deps/undici/undici:14900
+      Error.captureStackTrace(err);
+            ^
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getDefaultBucketId (/opt/render/project/src/node_modules/@replit/object-storage/dist/index.js:87:20)
+    at async Client.init (/opt/render/project/src/node_modules/@replit/object-storage/dist/index.js:124:51) {
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:1106
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 1106
+  }
+}
+Node.js v20.19.6

@@ -37,7 +37,6 @@ export function registerObjectStorageRoutes(app: Express): void {
       req.on('end', async () => {
         try {
           const fileBuffer = Buffer.concat(chunks);
-          // Decode file name (may be URI-encoded for special characters)
           const rawFileName = req.headers['x-file-name'] as string || 'upload';
           const fileName = decodeURIComponent(rawFileName);
           const contentType = req.headers['content-type'] || 'application/octet-stream';
@@ -77,6 +76,18 @@ export function registerObjectStorageRoutes(app: Express): void {
         return res.status(404).json({ error: "Object not found" });
       }
       return res.status(500).json({ error: "Failed to serve object" });
+    }
+  });
+
+  app.get("/uploads/:fileName(*)", async (req: Request, res: Response) => {
+    try {
+      await objectStorageService.downloadObjectToResponse(req.path, res);
+    } catch (error) {
+      console.error("Error serving upload:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      return res.status(500).json({ error: "Failed to serve file" });
     }
   });
 }
