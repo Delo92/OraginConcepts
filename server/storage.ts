@@ -6,6 +6,7 @@ import {
   siteSettings,
   galleryItems,
   portfolioMedia,
+  displayModeSettings,
   type Service,
   type InsertService,
   type Booking,
@@ -20,6 +21,8 @@ import {
   type InsertGalleryItem,
   type PortfolioMedia,
   type InsertPortfolioMedia,
+  type DisplayModeSettings,
+  type InsertDisplayModeSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -64,6 +67,10 @@ export interface IStorage {
   updatePortfolioMedia(id: number, media: Partial<InsertPortfolioMedia>): Promise<PortfolioMedia | undefined>;
   deletePortfolioMedia(id: number): Promise<boolean>;
   reorderPortfolioMedia(projectId: number, mediaIds: number[]): Promise<boolean>;
+
+  getDisplayModeSettings(mode: string): Promise<DisplayModeSettings | undefined>;
+  getAllDisplayModeSettings(): Promise<DisplayModeSettings[]>;
+  upsertDisplayModeSettings(mode: string, settings: Partial<InsertDisplayModeSettings>): Promise<DisplayModeSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -239,6 +246,31 @@ export class DatabaseStorage implements IStorage {
         .where(and(eq(portfolioMedia.id, mediaIds[i]), eq(portfolioMedia.projectId, projectId)));
     }
     return true;
+  }
+
+  async getDisplayModeSettings(mode: string): Promise<DisplayModeSettings | undefined> {
+    const [settings] = await db.select().from(displayModeSettings).where(eq(displayModeSettings.mode, mode));
+    return settings;
+  }
+
+  async getAllDisplayModeSettings(): Promise<DisplayModeSettings[]> {
+    return db.select().from(displayModeSettings);
+  }
+
+  async upsertDisplayModeSettings(mode: string, settings: Partial<InsertDisplayModeSettings>): Promise<DisplayModeSettings> {
+    const existing = await this.getDisplayModeSettings(mode);
+    if (existing) {
+      const [updated] = await db.update(displayModeSettings)
+        .set(settings)
+        .where(eq(displayModeSettings.mode, mode))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(displayModeSettings)
+        .values({ mode, ...settings })
+        .returning();
+      return created;
+    }
   }
 }
 

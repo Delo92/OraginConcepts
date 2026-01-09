@@ -150,3 +150,51 @@ export const insertPortfolioMediaSchema = createInsertSchema(portfolioMedia).omi
 
 export type InsertPortfolioMedia = z.infer<typeof insertPortfolioMediaSchema>;
 export type PortfolioMedia = typeof portfolioMedia.$inferSelect;
+
+// Display mode settings for Yin/Yang theming
+export const displayModeSettings = pgTable("display_mode_settings", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  mode: text("mode").notNull().unique(), // "professional" (Yin) or "edge" (Yang)
+  // Hero settings
+  heroItemId: integer("hero_item_id").references(() => galleryItems.id),
+  // Typography
+  headingFont: text("heading_font").default("Cormorant Garamond"),
+  bodyFont: text("body_font").default("Inter"),
+  // Colors
+  backgroundColor: text("background_color").default("#ffffff"),
+  surfaceColor: text("surface_color").default("#f8f9fa"),
+  accentColor: text("accent_color").default("#8B7355"),
+  textColor: text("text_color").default("#1a1a1a"),
+  // Additional styling
+  tagline: text("tagline"),
+});
+
+export const insertDisplayModeSettingsSchema = createInsertSchema(displayModeSettings).omit({
+  id: true,
+});
+
+export type InsertDisplayModeSettings = z.infer<typeof insertDisplayModeSettingsSchema>;
+export type DisplayModeSettings = typeof displayModeSettings.$inferSelect;
+
+// Available fonts list (for UI selection)
+export const AVAILABLE_FONTS = {
+  headings: [
+    { name: "Cormorant Garamond", family: "'Cormorant Garamond', serif", style: "elegant" },
+    { name: "Playfair Display", family: "'Playfair Display', serif", style: "elegant" },
+    { name: "Lora", family: "'Lora', serif", style: "elegant" },
+    { name: "DM Serif Display", family: "'DM Serif Display', serif", style: "elegant" },
+    { name: "Montserrat", family: "'Montserrat', sans-serif", style: "modern" },
+    { name: "Poppins", family: "'Poppins', sans-serif", style: "modern" },
+    { name: "Raleway", family: "'Raleway', sans-serif", style: "modern" },
+    { name: "Oswald", family: "'Oswald', sans-serif", style: "bold" },
+    { name: "Bebas Neue", family: "'Bebas Neue', sans-serif", style: "bold" },
+  ],
+  body: [
+    { name: "Inter", family: "'Inter', sans-serif", style: "clean" },
+    { name: "Source Sans 3", family: "'Source Sans 3', sans-serif", style: "clean" },
+    { name: "Open Sans", family: "'Open Sans', sans-serif", style: "clean" },
+    { name: "Lato", family: "'Lato', sans-serif", style: "clean" },
+    { name: "Roboto", family: "'Roboto', sans-serif", style: "clean" },
+    { name: "Nunito", family: "'Nunito', sans-serif", style: "friendly" },
+  ],
+};
