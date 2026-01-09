@@ -7,6 +7,7 @@ import {
   galleryItems,
   portfolioMedia,
   displayModeSettings,
+  customFonts,
   type Service,
   type InsertService,
   type Booking,
@@ -23,6 +24,8 @@ import {
   type InsertPortfolioMedia,
   type DisplayModeSettings,
   type InsertDisplayModeSettings,
+  type CustomFont,
+  type InsertCustomFont,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -71,6 +74,11 @@ export interface IStorage {
   getDisplayModeSettings(mode: string): Promise<DisplayModeSettings | undefined>;
   getAllDisplayModeSettings(): Promise<DisplayModeSettings[]>;
   upsertDisplayModeSettings(mode: string, settings: Partial<InsertDisplayModeSettings>): Promise<DisplayModeSettings>;
+
+  getCustomFonts(): Promise<CustomFont[]>;
+  getCustomFont(id: number): Promise<CustomFont | undefined>;
+  createCustomFont(font: InsertCustomFont): Promise<CustomFont>;
+  deleteCustomFont(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -271,6 +279,25 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  async getCustomFonts(): Promise<CustomFont[]> {
+    return db.select().from(customFonts);
+  }
+
+  async getCustomFont(id: number): Promise<CustomFont | undefined> {
+    const [font] = await db.select().from(customFonts).where(eq(customFonts.id, id));
+    return font;
+  }
+
+  async createCustomFont(font: InsertCustomFont): Promise<CustomFont> {
+    const [created] = await db.insert(customFonts).values(font).returning();
+    return created;
+  }
+
+  async deleteCustomFont(id: number): Promise<boolean> {
+    await db.delete(customFonts).where(eq(customFonts.id, id));
+    return true;
   }
 }
 

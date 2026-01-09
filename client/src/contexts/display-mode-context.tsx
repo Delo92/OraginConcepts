@@ -5,6 +5,19 @@ import { AVAILABLE_FONTS } from "@shared/schema";
 
 type DisplayMode = "professional" | "edge";
 
+interface FontInfo {
+  name: string;
+  family: string;
+  style: string;
+  isCustom?: boolean;
+  fontUrl?: string;
+}
+
+interface AvailableFontsData {
+  headings: FontInfo[];
+  body: FontInfo[];
+}
+
 interface DisplayModeContextType {
   displayMode: DisplayMode;
   setDisplayMode: (mode: DisplayMode) => void;
@@ -42,12 +55,6 @@ function hexToHSL(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-function getFontFamily(fontName: string): string {
-  const allFonts = [...AVAILABLE_FONTS.headings, ...AVAILABLE_FONTS.body];
-  const font = allFonts.find(f => f.name === fontName);
-  return font?.family || `'${fontName}', sans-serif`;
-}
-
 function loadGoogleFont(fontName: string) {
   const fontId = `google-font-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
   if (document.getElementById(fontId)) return;
@@ -57,6 +64,24 @@ function loadGoogleFont(fontName: string) {
   link.rel = "stylesheet";
   link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@300;400;500;600;700&display=swap`;
   document.head.appendChild(link);
+}
+
+function loadCustomFont(fontName: string, fontUrl: string) {
+  const fontId = `custom-font-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
+  if (document.getElementById(fontId)) return;
+
+  const style = document.createElement("style");
+  style.id = fontId;
+  style.textContent = `
+    @font-face {
+      font-family: '${fontName}';
+      src: url('${fontUrl}') format('woff2'), url('${fontUrl}') format('woff'), url('${fontUrl}') format('truetype');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 export function DisplayModeProvider({ children }: { children: ReactNode }) {
@@ -79,16 +104,46 @@ export function DisplayModeProvider({ children }: { children: ReactNode }) {
     staleTime: 1000 * 60 * 5,
   });
 
+  const { data: availableFonts } = useQuery<AvailableFontsData>({
+    queryKey: ["/api/available-fonts"],
+    staleTime: 1000 * 60 * 5,
+  });
+
   const modeSettings = allSettings?.find(s => s.mode === displayMode) || null;
+
+  const loadFont = (fontName: string) => {
+    if (!availableFonts) return;
+    
+    const allFonts = [...availableFonts.headings, ...availableFonts.body];
+    const font = allFonts.find(f => f.name === fontName);
+    
+    if (font?.isCustom && font?.fontUrl) {
+      loadCustomFont(fontName, font.fontUrl);
+    } else {
+      loadGoogleFont(fontName);
+    }
+  };
+
+  const getFontFamily = (fontName: string): string => {
+    if (!availableFonts) {
+      const allBuiltInFonts = [...AVAILABLE_FONTS.headings, ...AVAILABLE_FONTS.body];
+      const font = allBuiltInFonts.find(f => f.name === fontName);
+      return font?.family || `'${fontName}', sans-serif`;
+    }
+    
+    const allFonts = [...availableFonts.headings, ...availableFonts.body];
+    const font = allFonts.find(f => f.name === fontName);
+    return font?.family || `'${fontName}', sans-serif`;
+  };
 
   useEffect(() => {
     if (!modeSettings) return;
 
     if (modeSettings.headingFont) {
-      loadGoogleFont(modeSettings.headingFont);
+      loadFont(modeSettings.headingFont);
     }
     if (modeSettings.bodyFont) {
-      loadGoogleFont(modeSettings.bodyFont);
+      loadFont(modeSettings.bodyFont);
     }
 
     const root = document.documentElement;
@@ -131,7 +186,7 @@ export function DisplayModeProvider({ children }: { children: ReactNode }) {
       root.style.removeProperty("--mode-accent");
       root.style.removeProperty("--mode-text");
     };
-  }, [modeSettings, displayMode]);
+  }, [modeSettings, displayMode, availableFonts]);
 
   const toggleDisplayMode = () => {
     setDisplayMode((prev) => (prev === "professional" ? "edge" : "professional"));

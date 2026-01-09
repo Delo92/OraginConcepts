@@ -34,8 +34,8 @@ export default function Home() {
     : null;
   
   const heroItem = modeHeroItem || defaultHeroItem;
-  const heroImage = heroItem?.mediaUrl || "/logo.jpg";
-  const isHeroVideo = heroItem?.mediaType === "video";
+  const heroImage = modeSettings?.heroImageUrl || heroItem?.mediaUrl || "/logo.jpg";
+  const isHeroVideo = !modeSettings?.heroImageUrl && heroItem?.mediaType === "video";
   
   const displayTagline = modeSettings?.tagline || settings?.tagline || "Give Me Your Concept, Let's Make It Real.";
 

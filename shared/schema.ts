@@ -157,6 +157,7 @@ export const displayModeSettings = pgTable("display_mode_settings", {
   mode: text("mode").notNull().unique(), // "professional" (Yin) or "edge" (Yang)
   // Hero settings
   heroItemId: integer("hero_item_id").references(() => galleryItems.id),
+  heroImageUrl: text("hero_image_url"), // Direct upload URL (alternative to heroItemId)
   // Typography
   headingFont: text("heading_font").default("Cormorant Garamond"),
   bodyFont: text("body_font").default("Inter"),
@@ -176,25 +177,100 @@ export const insertDisplayModeSettingsSchema = createInsertSchema(displayModeSet
 export type InsertDisplayModeSettings = z.infer<typeof insertDisplayModeSettingsSchema>;
 export type DisplayModeSettings = typeof displayModeSettings.$inferSelect;
 
-// Available fonts list (for UI selection)
+// Custom fonts table for user-uploaded fonts
+export const customFonts = pgTable("custom_fonts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(),
+  family: text("family").notNull(),
+  fontUrl: text("font_url").notNull(),
+  fontType: text("font_type").notNull(), // "heading" or "body" or "both"
+  style: text("style").default("custom"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCustomFontSchema = createInsertSchema(customFonts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCustomFont = z.infer<typeof insertCustomFontSchema>;
+export type CustomFont = typeof customFonts.$inferSelect;
+
+// Available fonts list (for UI selection) - Expanded with more Google Fonts
 export const AVAILABLE_FONTS = {
   headings: [
+    // Elegant Serif
     { name: "Cormorant Garamond", family: "'Cormorant Garamond', serif", style: "elegant" },
     { name: "Playfair Display", family: "'Playfair Display', serif", style: "elegant" },
     { name: "Lora", family: "'Lora', serif", style: "elegant" },
     { name: "DM Serif Display", family: "'DM Serif Display', serif", style: "elegant" },
+    { name: "Crimson Text", family: "'Crimson Text', serif", style: "elegant" },
+    { name: "Libre Baskerville", family: "'Libre Baskerville', serif", style: "elegant" },
+    { name: "EB Garamond", family: "'EB Garamond', serif", style: "elegant" },
+    { name: "Merriweather", family: "'Merriweather', serif", style: "elegant" },
+    { name: "Spectral", family: "'Spectral', serif", style: "elegant" },
+    { name: "Bitter", family: "'Bitter', serif", style: "elegant" },
+    // Modern Sans
     { name: "Montserrat", family: "'Montserrat', sans-serif", style: "modern" },
     { name: "Poppins", family: "'Poppins', sans-serif", style: "modern" },
     { name: "Raleway", family: "'Raleway', sans-serif", style: "modern" },
+    { name: "Work Sans", family: "'Work Sans', sans-serif", style: "modern" },
+    { name: "Quicksand", family: "'Quicksand', sans-serif", style: "modern" },
+    { name: "Outfit", family: "'Outfit', sans-serif", style: "modern" },
+    { name: "Sora", family: "'Sora', sans-serif", style: "modern" },
+    { name: "Plus Jakarta Sans", family: "'Plus Jakarta Sans', sans-serif", style: "modern" },
+    { name: "Space Grotesk", family: "'Space Grotesk', sans-serif", style: "modern" },
+    { name: "Lexend", family: "'Lexend', sans-serif", style: "modern" },
+    // Bold Display
     { name: "Oswald", family: "'Oswald', sans-serif", style: "bold" },
     { name: "Bebas Neue", family: "'Bebas Neue', sans-serif", style: "bold" },
+    { name: "Anton", family: "'Anton', sans-serif", style: "bold" },
+    { name: "Archivo Black", family: "'Archivo Black', sans-serif", style: "bold" },
+    { name: "Fjalla One", family: "'Fjalla One', sans-serif", style: "bold" },
+    { name: "Teko", family: "'Teko', sans-serif", style: "bold" },
+    { name: "Passion One", family: "'Passion One', sans-serif", style: "bold" },
+    { name: "Black Ops One", family: "'Black Ops One', sans-serif", style: "bold" },
+    // Creative/Artistic
+    { name: "Cinzel", family: "'Cinzel', serif", style: "artistic" },
+    { name: "Abril Fatface", family: "'Abril Fatface', serif", style: "artistic" },
+    { name: "Righteous", family: "'Righteous', sans-serif", style: "artistic" },
+    { name: "Bungee", family: "'Bungee', sans-serif", style: "artistic" },
+    { name: "Russo One", family: "'Russo One', sans-serif", style: "artistic" },
+    { name: "Fredoka", family: "'Fredoka', sans-serif", style: "artistic" },
+    // Script/Handwritten
+    { name: "Dancing Script", family: "'Dancing Script', cursive", style: "script" },
+    { name: "Pacifico", family: "'Pacifico', cursive", style: "script" },
+    { name: "Satisfy", family: "'Satisfy', cursive", style: "script" },
+    { name: "Great Vibes", family: "'Great Vibes', cursive", style: "script" },
+    { name: "Lobster", family: "'Lobster', cursive", style: "script" },
+    { name: "Sacramento", family: "'Sacramento', cursive", style: "script" },
   ],
   body: [
+    // Clean Sans-Serif
     { name: "Inter", family: "'Inter', sans-serif", style: "clean" },
     { name: "Source Sans 3", family: "'Source Sans 3', sans-serif", style: "clean" },
     { name: "Open Sans", family: "'Open Sans', sans-serif", style: "clean" },
     { name: "Lato", family: "'Lato', sans-serif", style: "clean" },
     { name: "Roboto", family: "'Roboto', sans-serif", style: "clean" },
     { name: "Nunito", family: "'Nunito', sans-serif", style: "friendly" },
+    { name: "Nunito Sans", family: "'Nunito Sans', sans-serif", style: "clean" },
+    { name: "DM Sans", family: "'DM Sans', sans-serif", style: "clean" },
+    { name: "IBM Plex Sans", family: "'IBM Plex Sans', sans-serif", style: "clean" },
+    { name: "Karla", family: "'Karla', sans-serif", style: "clean" },
+    { name: "Mulish", family: "'Mulish', sans-serif", style: "clean" },
+    { name: "Rubik", family: "'Rubik', sans-serif", style: "clean" },
+    { name: "Manrope", family: "'Manrope', sans-serif", style: "clean" },
+    { name: "Figtree", family: "'Figtree', sans-serif", style: "clean" },
+    { name: "Albert Sans", family: "'Albert Sans', sans-serif", style: "clean" },
+    // Readable Serif
+    { name: "Crimson Pro", family: "'Crimson Pro', serif", style: "readable" },
+    { name: "Source Serif 4", family: "'Source Serif 4', serif", style: "readable" },
+    { name: "Libre Baskerville", family: "'Libre Baskerville', serif", style: "readable" },
+    { name: "PT Serif", family: "'PT Serif', serif", style: "readable" },
+    { name: "Noto Serif", family: "'Noto Serif', serif", style: "readable" },
+    // Monospace
+    { name: "JetBrains Mono", family: "'JetBrains Mono', monospace", style: "mono" },
+    { name: "Fira Code", family: "'Fira Code', monospace", style: "mono" },
+    { name: "Source Code Pro", family: "'Source Code Pro', monospace", style: "mono" },
   ],
 };

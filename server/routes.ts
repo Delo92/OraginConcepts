@@ -563,8 +563,80 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/available-fonts", (req, res) => {
-    res.json(AVAILABLE_FONTS);
+  app.get("/api/available-fonts", async (req, res) => {
+    try {
+      const customFontsList = await storage.getCustomFonts();
+      const customHeadings = customFontsList
+        .filter(f => f.fontType === "heading" || f.fontType === "both")
+        .map(f => ({
+          name: f.name,
+          family: f.family,
+          style: f.style || "custom",
+          isCustom: true,
+          id: f.id,
+          fontUrl: f.fontUrl,
+        }));
+      const customBody = customFontsList
+        .filter(f => f.fontType === "body" || f.fontType === "both")
+        .map(f => ({
+          name: f.name,
+          family: f.family,
+          style: f.style || "custom",
+          isCustom: true,
+          id: f.id,
+          fontUrl: f.fontUrl,
+        }));
+      
+      res.json({
+        headings: [...AVAILABLE_FONTS.headings, ...customHeadings],
+        body: [...AVAILABLE_FONTS.body, ...customBody],
+      });
+    } catch (error) {
+      console.error("Error fetching available fonts:", error);
+      res.json(AVAILABLE_FONTS);
+    }
+  });
+
+  app.get("/api/custom-fonts", isAdminAuthenticated, async (req, res) => {
+    try {
+      const fonts = await storage.getCustomFonts();
+      res.json(fonts);
+    } catch (error) {
+      console.error("Error fetching custom fonts:", error);
+      res.status(500).json({ message: "Failed to fetch custom fonts" });
+    }
+  });
+
+  app.post("/api/custom-fonts", isAdminAuthenticated, async (req, res) => {
+    try {
+      const { name, fontUrl, fontType, style } = req.body;
+      if (!name || !fontUrl || !fontType) {
+        return res.status(400).json({ message: "Name, fontUrl, and fontType are required" });
+      }
+      const family = `'${name}', sans-serif`;
+      const font = await storage.createCustomFont({
+        name,
+        family,
+        fontUrl,
+        fontType,
+        style: style || "custom",
+      });
+      res.json(font);
+    } catch (error) {
+      console.error("Error creating custom font:", error);
+      res.status(500).json({ message: "Failed to create custom font" });
+    }
+  });
+
+  app.delete("/api/custom-fonts/:id", isAdminAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCustomFont(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting custom font:", error);
+      res.status(500).json({ message: "Failed to delete custom font" });
+    }
   });
 
   return httpServer;
