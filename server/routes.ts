@@ -377,6 +377,20 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/gallery/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getGalleryItem(id);
+      if (!item) {
+        return res.status(404).json({ message: "Gallery item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching gallery item:", error);
+      res.status(500).json({ message: "Failed to fetch gallery item" });
+    }
+  });
+
   app.post("/api/gallery", isAdminAuthenticated, async (req, res) => {
     try {
       const data = insertGalleryItemSchema.parse(req.body);

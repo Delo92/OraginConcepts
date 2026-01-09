@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { useParams, Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { useUpload } from "@/hooks/use-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useUpload } from "@/hooks/use-upload";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,23 +28,37 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Trash2, Star, ImageIcon, Film, Loader2, Pencil, FolderOpen } from "lucide-react";
-import type { GalleryItem } from "@shared/schema";
+import { 
+  Plus, 
+  Trash2, 
+  ImageIcon, 
+  Film, 
+  Loader2, 
+  ArrowLeft, 
+  Music,
+  Pencil,
+  ExternalLink
+} from "lucide-react";
+import type { GalleryItem, PortfolioMedia } from "@shared/schema";
 
-export default function AdminGallery() {
+export default function AdminProjectMedia() {
+  const { projectId } = useParams<{ projectId: string }>();
   const { toast } = useToast();
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [editItem, setEditItem] = useState<GalleryItem | null>(null);
+  const [editMedia, setEditMedia] = useState<PortfolioMedia | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editProjectUrl, setEditProjectUrl] = useState("");
-  const fileInputRef = useState<HTMLInputElement | null>(null);
 
-  const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
-    queryKey: ["/api/gallery"],
+  const { data: project, isLoading: projectLoading } = useQuery<GalleryItem>({
+    queryKey: [`/api/gallery/${projectId}`],
+    enabled: !!projectId,
   });
 
-  const { uploadFile, isUploading, progress } = useUpload({
+  const { data: media, isLoading: mediaLoading } = useQuery<PortfolioMedia[]>({
+    queryKey: [`/api/projects/${projectId}/media`],
+    enabled: !!projectId,
+  });
+
+  const { uploadFile, isUploading } = useUpload({
     onSuccess: async (response) => {
       const mediaType = getMediaType(response.metadata.contentType);
       await createMutation.mutateAsync({
@@ -65,32 +78,33 @@ export default function AdminGallery() {
 
   const createMutation = useMutation({
     mutationFn: async (data: { mediaUrl: string; mediaType: string; title?: string }) => {
-      return apiRequest("POST", "/api/gallery", data);
+      return apiRequest("POST", `/api/projects/${projectId}/media`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
-      toast({ title: "Media uploaded successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/media`] });
+      toast({ title: "Media added successfully" });
     },
     onError: () => {
       toast({
-        title: "Failed to save media",
+        title: "Failed to add media",
         variant: "destructive",
       });
     },
   });
 
-  const setHeroMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest("POST", `/api/gallery/${id}/set-hero`);
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: number; title?: string }) => {
+      const { id, ...updateData } = data;
+      return apiRequest("PUT", `/api/projects/${projectId}/media/${id}`, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery/hero"] });
-      toast({ title: "Hero image updated" });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/media`] });
+      toast({ title: "Media updated" });
+      setEditMedia(null);
     },
     onError: () => {
       toast({
-        title: "Failed to set hero image",
+        title: "Failed to update media",
         variant: "destructive",
       });
     },
@@ -98,12 +112,11 @@ export default function AdminGallery() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest("DELETE", `/api/gallery/${id}`);
+      return apiRequest("DELETE", `/api/projects/${projectId}/media/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery/hero"] });
-      toast({ title: "Media deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/media`] });
+      toast({ title: "Media deleted" });
       setDeleteId(null);
     },
     onError: () => {
@@ -113,41 +126,6 @@ export default function AdminGallery() {
       });
     },
   });
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: { id: number; title?: string; description?: string; projectUrl?: string }) => {
-      const { id, ...updateData } = data;
-      return apiRequest("PUT", `/api/gallery/${id}`, updateData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
-      toast({ title: "Portfolio item updated" });
-      setEditItem(null);
-    },
-    onError: () => {
-      toast({
-        title: "Failed to update portfolio item",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleEditClick = (item: GalleryItem) => {
-    setEditItem(item);
-    setEditTitle(item.title || "");
-    setEditDescription(item.description || "");
-    setEditProjectUrl(item.projectUrl || "");
-  };
-
-  const handleEditSave = () => {
-    if (!editItem) return;
-    updateMutation.mutate({
-      id: editItem.id,
-      title: editTitle || undefined,
-      description: editDescription || undefined,
-      projectUrl: editProjectUrl || undefined,
-    });
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -160,11 +138,16 @@ export default function AdminGallery() {
         "video/mp4",
         "video/webm",
         "video/quicktime",
+        "audio/mpeg",
+        "audio/wav",
+        "audio/ogg",
+        "audio/mp3",
+        "audio/aac",
       ];
       if (!validTypes.includes(file.type)) {
         toast({
           title: "Invalid file type",
-          description: "Please upload an image (JPG, PNG, GIF, WebP) or video (MP4, WebM, MOV)",
+          description: "Please upload an image, video, or audio file",
           variant: "destructive",
         });
         return;
@@ -177,16 +160,21 @@ export default function AdminGallery() {
   const getMediaType = (contentType: string): string => {
     if (contentType === "image/gif") return "gif";
     if (contentType.startsWith("video/")) return "video";
+    if (contentType.startsWith("audio/")) return "audio";
     return "image";
   };
 
-  const renderMedia = (item: GalleryItem) => {
-    const url = item.mediaUrl.startsWith("/objects/") ? item.mediaUrl : item.mediaUrl;
-    
+  const getMediaIcon = (type: string) => {
+    if (type === "video") return <Film className="h-3 w-3" />;
+    if (type === "audio") return <Music className="h-3 w-3" />;
+    return <ImageIcon className="h-3 w-3" />;
+  };
+
+  const renderMedia = (item: PortfolioMedia) => {
     if (item.mediaType === "video") {
       return (
         <video
-          src={url}
+          src={item.mediaUrl}
           className="w-full h-full object-cover"
           muted
           loop
@@ -196,40 +184,98 @@ export default function AdminGallery() {
         />
       );
     }
+    if (item.mediaType === "audio") {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5 p-4">
+          <Music className="h-12 w-12 text-primary mb-2" />
+          <p className="text-sm text-center truncate w-full">{item.title || "Audio file"}</p>
+          <audio src={item.mediaUrl} controls className="w-full mt-2" />
+        </div>
+      );
+    }
     return (
       <img
-        src={url}
-        alt={item.title || "Portfolio item"}
+        src={item.mediaUrl}
+        alt={item.title || "Media"}
         className="w-full h-full object-cover"
       />
     );
   };
 
-  const getMediaIcon = (type: string) => {
-    if (type === "video") return <Film className="h-3 w-3" />;
-    return <ImageIcon className="h-3 w-3" />;
+  const handleEditClick = (item: PortfolioMedia) => {
+    setEditMedia(item);
+    setEditTitle(item.title || "");
   };
+
+  const handleEditSave = () => {
+    if (!editMedia) return;
+    updateMutation.mutate({
+      id: editMedia.id,
+      title: editTitle || undefined,
+    });
+  };
+
+  if (projectLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-muted-foreground">Project not found</p>
+        <Button asChild variant="outline" className="mt-4">
+          <Link href="/admin/gallery">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Portfolio
+          </Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-normal" data-testid="text-gallery-heading">
-              Portfolio
+            <div className="flex items-center gap-2 mb-2">
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/admin/gallery">
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back
+                </Link>
+              </Button>
+            </div>
+            <h1 className="font-serif text-3xl font-normal">
+              {project.title || "Untitled Project"}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Upload photos, videos, and GIFs. Set one as your home page hero.
+              Add images, videos, and audio files to showcase this project
             </p>
+            {project.projectUrl && (
+              <a 
+                href={project.projectUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline inline-flex items-center gap-1 mt-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                View Live Project
+              </a>
+            )}
           </div>
           <div>
             <input
               type="file"
-              accept="image/*,video/*"
+              accept="image/*,video/*,audio/*"
               className="hidden"
               onChange={handleFileChange}
               id="media-upload"
-              data-testid="input-file-upload"
             />
             <Button asChild disabled={isUploading || createMutation.isPending}>
               <label htmlFor="media-upload" className="cursor-pointer">
@@ -241,7 +287,7 @@ export default function AdminGallery() {
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2" />
-                    Upload Media
+                    Add Media
                   </>
                 )}
               </label>
@@ -249,16 +295,16 @@ export default function AdminGallery() {
           </div>
         </div>
 
-        {isLoading ? (
+        {mediaLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="aspect-square rounded-md" />
             ))}
           </div>
-        ) : galleryItems && galleryItems.length > 0 ? (
+        ) : media && media.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {galleryItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden group relative" data-testid={`card-gallery-${item.id}`}>
+            {media.map((item) => (
+              <Card key={item.id} className="overflow-hidden group relative">
                 <CardContent className="p-0">
                   <div className="aspect-square relative overflow-hidden">
                     {renderMedia(item)}
@@ -267,53 +313,29 @@ export default function AdminGallery() {
                         {getMediaIcon(item.mediaType)}
                         <span className="ml-1 capitalize">{item.mediaType}</span>
                       </Badge>
-                      {item.isHero && (
-                        <Badge className="text-xs bg-primary">
-                          <Star className="h-3 w-3 mr-1 fill-current" />
-                          Hero
-                        </Badge>
-                      )}
                     </div>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <Button
                         size="icon"
                         variant="secondary"
                         onClick={() => handleEditClick(item)}
-                        data-testid={`button-edit-${item.id}`}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      {!item.isHero && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setHeroMutation.mutate(item.id)}
-                          disabled={setHeroMutation.isPending}
-                          data-testid={`button-set-hero-${item.id}`}
-                        >
-                          <Star className="h-4 w-4 mr-1" />
-                          Set as Hero
-                        </Button>
-                      )}
                       <Button
                         size="icon"
                         variant="destructive"
                         onClick={() => setDeleteId(item.id)}
-                        data-testid={`button-delete-${item.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                  <div className="p-3 border-t">
-                    <p className="text-sm font-medium truncate mb-2">{item.title || "Untitled Project"}</p>
-                    <Button asChild variant="outline" size="sm" className="w-full">
-                      <Link href={`/admin/projects/${item.id}`}>
-                        <FolderOpen className="h-4 w-4 mr-2" />
-                        Manage Media
-                      </Link>
-                    </Button>
-                  </div>
+                  {item.title && (
+                    <div className="p-2 border-t">
+                      <p className="text-sm truncate">{item.title}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -322,11 +344,11 @@ export default function AdminGallery() {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground mb-4">No media uploaded yet.</p>
+              <p className="text-muted-foreground mb-4">No media added yet.</p>
               <Button asChild>
                 <label htmlFor="media-upload" className="cursor-pointer">
                   <Plus className="h-4 w-4 mr-2" />
-                  Upload Your First Media
+                  Add Your First Media
                 </label>
               </Button>
             </CardContent>
@@ -343,11 +365,10 @@ export default function AdminGallery() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              data-testid="button-confirm-delete"
             >
               Delete
             </AlertDialogAction>
@@ -355,12 +376,12 @@ export default function AdminGallery() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={editItem !== null} onOpenChange={(open) => !open && setEditItem(null)}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog open={editMedia !== null} onOpenChange={(open) => !open && setEditMedia(null)}>
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Edit Portfolio Item</DialogTitle>
+            <DialogTitle>Edit Media</DialogTitle>
             <DialogDescription>
-              Add details about this project. Include a link so visitors can see your live work.
+              Update the title for this media file.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -370,35 +391,12 @@ export default function AdminGallery() {
                 id="edit-title"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Project title"
+                placeholder="Media title"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Describe what you created and the technologies used..."
-                rows={4}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-url">Project URL</Label>
-              <Input
-                id="edit-url"
-                value={editProjectUrl}
-                onChange={(e) => setEditProjectUrl(e.target.value)}
-                placeholder="https://example.com"
-                type="url"
-              />
-              <p className="text-xs text-muted-foreground">
-                Add a link so visitors can view the live project
-              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditItem(null)}>
+            <Button variant="outline" onClick={() => setEditMedia(null)}>
               Cancel
             </Button>
             <Button onClick={handleEditSave} disabled={updateMutation.isPending}>
@@ -408,7 +406,7 @@ export default function AdminGallery() {
                   Saving...
                 </>
               ) : (
-                "Save Changes"
+                "Save"
               )}
             </Button>
           </DialogFooter>
