@@ -196,6 +196,90 @@ export const insertCustomFontSchema = createInsertSchema(customFonts).omit({
 export type InsertCustomFont = z.infer<typeof insertCustomFontSchema>;
 export type CustomFont = typeof customFonts.$inferSelect;
 
+// Payment methods table for dynamic payment options with encrypted credentials
+export const paymentMethods = pgTable("payment_methods", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  providerType: text("provider_type").notNull(), // e.g., "stripe", "paypal", "cashapp_link", etc.
+  displayName: text("display_name").notNull(), // e.g., "Stripe", "PayPal", "Cash App"
+  isActive: boolean("is_active").default(true).notNull(),
+  // For link-based methods (Cash App, Venmo, Chime, Apple Pay)
+  paymentLink: text("payment_link"),
+  // For API-based methods - encrypted credentials stored as JSON
+  encryptedCredentials: text("encrypted_credentials"),
+  // Metadata
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+
+// Payment provider definitions with required fields
+export const PAYMENT_PROVIDERS = {
+  // Link-based (simple URL)
+  cashapp_link: { 
+    name: "Cash App", 
+    type: "link", 
+    fields: [{ key: "url", label: "Cash App Link", placeholder: "https://cash.app/$yourusername" }]
+  },
+  venmo_link: { 
+    name: "Venmo", 
+    type: "link", 
+    fields: [{ key: "url", label: "Venmo Link", placeholder: "https://venmo.com/yourusername" }]
+  },
+  chime_link: { 
+    name: "Chime", 
+    type: "link", 
+    fields: [{ key: "url", label: "Chime Link", placeholder: "Your Chime payment link" }]
+  },
+  applepay_link: { 
+    name: "Apple Pay", 
+    type: "link", 
+    fields: [{ key: "url", label: "Apple Pay Link", placeholder: "Your Apple Pay link" }]
+  },
+  // API-based (require credentials)
+  stripe: { 
+    name: "Stripe", 
+    type: "api", 
+    fields: [
+      { key: "publishableKey", label: "Publishable Key", placeholder: "pk_live_..." },
+      { key: "secretKey", label: "Secret Key", placeholder: "sk_live_...", sensitive: true }
+    ]
+  },
+  paypal: { 
+    name: "PayPal", 
+    type: "api", 
+    fields: [
+      { key: "clientId", label: "Client ID", placeholder: "Your PayPal Client ID" },
+      { key: "clientSecret", label: "Client Secret", placeholder: "Your PayPal Client Secret", sensitive: true }
+    ]
+  },
+  authorize_net: { 
+    name: "Authorize.net", 
+    type: "api", 
+    fields: [
+      { key: "apiLoginId", label: "API Login ID", placeholder: "Your API Login ID" },
+      { key: "transactionKey", label: "Transaction Key", placeholder: "Your Transaction Key", sensitive: true }
+    ]
+  },
+  shopify: { 
+    name: "Shopify", 
+    type: "api", 
+    fields: [
+      { key: "storeUrl", label: "Store URL", placeholder: "yourstore.myshopify.com" },
+      { key: "apiKey", label: "API Key", placeholder: "Your Shopify API Key" },
+      { key: "apiSecret", label: "API Secret", placeholder: "Your Shopify API Secret", sensitive: true }
+    ]
+  },
+} as const;
+
+export type PaymentProviderType = keyof typeof PAYMENT_PROVIDERS;
+
 // Available fonts list (for UI selection) - Expanded with more Google Fonts
 export const AVAILABLE_FONTS = {
   headings: [

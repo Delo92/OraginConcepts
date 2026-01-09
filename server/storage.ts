@@ -8,6 +8,7 @@ import {
   portfolioMedia,
   displayModeSettings,
   customFonts,
+  paymentMethods,
   type Service,
   type InsertService,
   type Booking,
@@ -26,6 +27,8 @@ import {
   type InsertDisplayModeSettings,
   type CustomFont,
   type InsertCustomFont,
+  type PaymentMethod,
+  type InsertPaymentMethod,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -79,6 +82,12 @@ export interface IStorage {
   getCustomFont(id: number): Promise<CustomFont | undefined>;
   createCustomFont(font: InsertCustomFont): Promise<CustomFont>;
   deleteCustomFont(id: number): Promise<boolean>;
+
+  getPaymentMethods(): Promise<PaymentMethod[]>;
+  getPaymentMethod(id: number): Promise<PaymentMethod | undefined>;
+  createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod>;
+  updatePaymentMethod(id: number, method: Partial<InsertPaymentMethod>): Promise<PaymentMethod | undefined>;
+  deletePaymentMethod(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -297,6 +306,30 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCustomFont(id: number): Promise<boolean> {
     await db.delete(customFonts).where(eq(customFonts.id, id));
+    return true;
+  }
+
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    return db.select().from(paymentMethods).orderBy(paymentMethods.sortOrder);
+  }
+
+  async getPaymentMethod(id: number): Promise<PaymentMethod | undefined> {
+    const [method] = await db.select().from(paymentMethods).where(eq(paymentMethods.id, id));
+    return method;
+  }
+
+  async createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod> {
+    const [created] = await db.insert(paymentMethods).values(method).returning();
+    return created;
+  }
+
+  async updatePaymentMethod(id: number, method: Partial<InsertPaymentMethod>): Promise<PaymentMethod | undefined> {
+    const [updated] = await db.update(paymentMethods).set(method).where(eq(paymentMethods.id, id)).returning();
+    return updated;
+  }
+
+  async deletePaymentMethod(id: number): Promise<boolean> {
+    await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
     return true;
   }
 }
