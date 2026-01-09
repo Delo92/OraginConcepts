@@ -1,0 +1,325 @@
+ It looks like we don't have access to your repo, but we'll try to clone it anyway.
+==> Cloning from https://github.com/Delo92/OraginConcepts
+==> Checking out commit 6acfdd1e276e0b478a7da7488e03dd01301274d7 in branch main
+==> Requesting Node.js version 20.x
+==> Using Node.js version 20.19.6 via /opt/render/project/src/package.json
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Running build command 'npm install; npm run build'...
+added 643 packages, and audited 644 packages in 10s
+91 packages are looking for funding
+  run `npm fund` for details
+4 high severity vulnerabilities
+To address all issues, run:
+  npm audit fix
+Run `npm audit` for details.
+> oraginal-concepts@1.0.0 build
+> tsx script/build.ts
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2692 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                   1.34 kB │ gzip:   0.65 kB
+../dist/public/assets/index-BWMQojXG.css   83.02 kB │ gzip:  13.51 kB
+../dist/public/assets/index-tlWljVPw.js   697.34 kB │ gzip: 202.84 kB
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.34s
+building server...
+  dist/index.cjs  1.1mb ⚠️
+⚡ Done in 149ms
+==> Uploading build...
+==> Uploaded in 6.3s. Compression took 3.8s
+==> Build successful 🎉
+==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+==> Deploying...
+==> Running 'npm run start'
+> oraginal-concepts@1.0.0 start
+> NODE_ENV=production node dist/index.cjs
+Error seeding database: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async $4 (/opt/render/project/src/dist/index.cjs:76:119124)
+    at async U4 (/opt/render/project/src/dist/index.cjs:76:128507)
+    at async /opt/render/project/src/dist/index.cjs:76:138364 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:13:21 AM [express] serving on port 10000
+==> Your service is live 🎉
+==> 
+==> ///////////////////////////////////////////////////////////
+==> 
+==> Available at your primary URL https://oraginconcepts.onrender.com
+==> 
+==> ///////////////////////////////////////////////////////////
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:15 AM [express] GET /api/payment-methods/active 500 in 32ms :: {"message":"Failed to fetch payment methods"}
+Error fetching settings: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async lm.getSettings (/opt/render/project/src/dist/index.cjs:76:112409)
+    at async /opt/render/project/src/dist/index.cjs:76:127970 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:18 AM [express] GET /api/settings 500 in 29ms :: {"message":"Failed to fetch settings"}
+Error fetching blocked dates: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async /opt/render/project/src/dist/index.cjs:76:127171 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:18 AM [express] GET /api/blocked-dates 500 in 32ms :: {"message":"Failed to fetch blocked dates"}
+Error fetching services: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async /opt/render/project/src/dist/index.cjs:76:122975 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:18 AM [express] GET /api/services 500 in 32ms :: {"message":"Failed to fetch services"}
+Error fetching active payment methods: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async /opt/render/project/src/dist/index.cjs:76:135295 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:18 AM [express] GET /api/payment-methods/active 500 in 31ms :: {"message":"Failed to fetch payment methods"}
+Error fetching settings: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async lm.getSettings (/opt/render/project/src/dist/index.cjs:76:112409)
+    at async /opt/render/project/src/dist/index.cjs:76:127970 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:19 AM [express] GET /api/settings 500 in 33ms :: {"message":"Failed to fetch settings"}
+Error fetching services: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async /opt/render/project/src/dist/index.cjs:76:122975 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:19 AM [express] GET /api/services 500 in 32ms :: {"message":"Failed to fetch services"}
+Error fetching gallery items: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async /opt/render/project/src/dist/index.cjs:76:128562 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:20 AM [express] GET /api/gallery 500 in 37ms :: {"message":"Failed to fetch gallery items"}
+Error fetching hero image: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async lm.getHeroGalleryItem (/opt/render/project/src/dist/index.cjs:76:112870)
+    at async /opt/render/project/src/dist/index.cjs:76:128770 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:20 AM [express] GET /api/gallery/hero 500 in 37ms :: {"message":"Failed to fetch hero image"}
+Error fetching settings: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async lm.getSettings (/opt/render/project/src/dist/index.cjs:76:112409)
+    at async /opt/render/project/src/dist/index.cjs:76:127970 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:20 AM [express] GET /api/settings 500 in 36ms :: {"message":"Failed to fetch settings"}
+Error fetching services: error: SSL/TLS required
+    at /opt/render/project/src/dist/index.cjs:64:13326
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /opt/render/project/src/dist/index.cjs:76:107900
+    at async /opt/render/project/src/dist/index.cjs:76:122975 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+7:14:20 AM [express] GET /api/services 500 in 48ms :: {"message":"Failed to fetch services"}
