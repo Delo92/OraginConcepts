@@ -10,6 +10,7 @@ import {
   insertBlockedDateSchema,
   insertSiteSettingsSchema,
   insertGalleryItemSchema,
+  insertPortfolioMediaSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
@@ -430,6 +431,76 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting gallery item:", error);
       res.status(500).json({ message: "Failed to delete gallery item" });
+    }
+  });
+
+  app.get("/api/projects/:projectId/media", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const media = await storage.getPortfolioMedia(projectId);
+      res.json(media);
+    } catch (error) {
+      console.error("Error fetching portfolio media:", error);
+      res.status(500).json({ message: "Failed to fetch portfolio media" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/media", isAdminAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const data = insertPortfolioMediaSchema.parse({ ...req.body, projectId });
+      const media = await storage.createPortfolioMedia(data);
+      res.status(201).json(media);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating portfolio media:", error);
+      res.status(500).json({ message: "Failed to create portfolio media" });
+    }
+  });
+
+  app.put("/api/projects/:projectId/media/:mediaId", isAdminAuthenticated, async (req, res) => {
+    try {
+      const mediaId = parseInt(req.params.mediaId);
+      const data = insertPortfolioMediaSchema.partial().parse(req.body);
+      const media = await storage.updatePortfolioMedia(mediaId, data);
+      if (!media) {
+        return res.status(404).json({ message: "Media not found" });
+      }
+      res.json(media);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating portfolio media:", error);
+      res.status(500).json({ message: "Failed to update portfolio media" });
+    }
+  });
+
+  app.delete("/api/projects/:projectId/media/:mediaId", isAdminAuthenticated, async (req, res) => {
+    try {
+      const mediaId = parseInt(req.params.mediaId);
+      await storage.deletePortfolioMedia(mediaId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting portfolio media:", error);
+      res.status(500).json({ message: "Failed to delete portfolio media" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/media/reorder", isAdminAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { mediaIds } = req.body;
+      if (!Array.isArray(mediaIds)) {
+        return res.status(400).json({ message: "mediaIds must be an array" });
+      }
+      await storage.reorderPortfolioMedia(projectId, mediaIds);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering portfolio media:", error);
+      res.status(500).json({ message: "Failed to reorder portfolio media" });
     }
   });
 
