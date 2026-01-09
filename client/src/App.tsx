@@ -22,6 +22,7 @@ import AdminAvailability from "@/pages/admin/availability";
 import AdminSettings from "@/pages/admin/settings";
 import AdminGallery from "@/pages/admin/gallery";
 import AdminProjectMedia from "@/pages/admin/project-media";
+import AdminAppearance from "@/pages/admin/appearance";
 
 function AdminRoutes() {
   const { isAdmin, isLoading } = useAdminAuth();
@@ -59,6 +60,7 @@ function AdminRoutes() {
         <Route path="/admin/availability" component={AdminAvailability} />
         <Route path="/admin/gallery" component={AdminGallery} />
         <Route path="/admin/projects/:projectId" component={AdminProjectMedia} />
+        <Route path="/admin/appearance" component={AdminAppearance} />
         <Route path="/admin/settings" component={AdminSettings} />
         <Route component={NotFound} />
       </Switch>

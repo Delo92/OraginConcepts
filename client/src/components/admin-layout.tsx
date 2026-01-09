@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, Package, Calendar, Clock, Settings, LogOut, ExternalLink, ChevronUp, User, ImageIcon } from "lucide-react";
+import { LayoutDashboard, Package, Calendar, Clock, Settings, LogOut, ExternalLink, ChevronUp, User, ImageIcon, Palette } from "lucide-react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -35,6 +35,7 @@ const menuItems = [
   { href: "/admin/bookings", label: "Projects", icon: Calendar },
   { href: "/admin/availability", label: "Availability", icon: Clock },
   { href: "/admin/gallery", label: "Portfolio", icon: ImageIcon },
+  { href: "/admin/appearance", label: "Appearance", icon: Palette },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
