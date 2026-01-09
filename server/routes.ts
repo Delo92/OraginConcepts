@@ -42,8 +42,19 @@ export async function registerRoutes(
 ): Promise<Server> {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
   const pgStore = connectPg(session);
+  
+  // Build connection string with SSL if needed
+  let conString = process.env.DATABASE_URL!;
+  const isProduction = process.env.NODE_ENV === "production";
+  const isExternalDb = conString.includes("render.com") || 
+                       conString.includes("neon.tech") || 
+                       conString.includes("supabase.");
+  if ((isProduction || isExternalDb) && !conString.includes("sslmode=")) {
+    conString += conString.includes("?") ? "&sslmode=require" : "?sslmode=require";
+  }
+  
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    conString,
     createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
