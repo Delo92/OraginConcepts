@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,26 +17,243 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CreditCard, Store, Phone } from "lucide-react";
-import type { SiteSettings } from "@shared/schema";
+import { CreditCard, Store, Phone, Plus, Trash2, Lock, Link as LinkIcon } from "lucide-react";
+import type { SiteSettings, PaymentMethod } from "@shared/schema";
+import { PAYMENT_PROVIDERS, type PaymentProviderType } from "@shared/schema";
 
 const settingsFormSchema = z.object({
   businessName: z.string().min(1, "Business name is required"),
   tagline: z.string().optional(),
   aboutText: z.string().optional(),
   heroImageUrl: z.string().url().optional().or(z.literal("")),
-  cashappLink: z.string().url().optional().or(z.literal("")),
-  chimeLink: z.string().url().optional().or(z.literal("")),
-  applepayLink: z.string().url().optional().or(z.literal("")),
-  venmoLink: z.string().url().optional().or(z.literal("")),
   contactEmail: z.string().email().optional().or(z.literal("")),
   contactPhone: z.string().optional(),
   address: z.string().optional(),
   hoursOfOperation: z.string().optional(),
   footerTagline: z.string().optional(),
 });
+
+function PaymentMethodsSection() {
+  const { toast } = useToast();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<PaymentProviderType | "">("");
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
+
+  const { data: paymentMethods = [], isLoading } = useQuery<PaymentMethod[]>({
+    queryKey: ["/api/payment-methods"],
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (data: { providerType: string; credentials: Record<string, string> }) => {
+      const res = await apiRequest("POST", "/api/payment-methods", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payment-methods"] });
+      toast({ title: "Success", description: "Payment method added successfully!" });
+      setIsAddDialogOpen(false);
+      setSelectedProvider("");
+      setCredentials({});
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/payment-methods/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payment-methods"] });
+      toast({ title: "Success", description: "Payment method removed!" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleAddPaymentMethod = () => {
+    if (!selectedProvider) return;
+    addMutation.mutate({ providerType: selectedProvider, credentials });
+  };
+
+  const providerOptions = Object.entries(PAYMENT_PROVIDERS).filter(
+    ([key]) => !paymentMethods.some(m => m.providerType === key)
+  );
+
+  const currentProvider = selectedProvider ? PAYMENT_PROVIDERS[selectedProvider] : null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-primary" />
+            <CardTitle className="font-serif text-lg">Payment Methods</CardTitle>
+          </div>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" disabled={providerOptions.length === 0}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Payment Method
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Payment Method</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Payment Provider</label>
+                  <Select
+                    value={selectedProvider}
+                    onValueChange={(value) => {
+                      setSelectedProvider(value as PaymentProviderType);
+                      setCredentials({});
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a payment provider..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {providerOptions.map(([key, provider]) => (
+                        <SelectItem key={key} value={key}>
+                          <div className="flex items-center gap-2">
+                            {provider.type === "api" ? (
+                              <Lock className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            {provider.name}
+                            {provider.type === "api" && (
+                              <span className="text-xs text-muted-foreground">(API)</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {currentProvider && (
+                  <div className="space-y-3">
+                    {currentProvider.fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <label className="text-sm font-medium">{field.label}</label>
+                        <Input
+                          type={(field as any).sensitive ? "password" : "text"}
+                          placeholder={field.placeholder}
+                          value={credentials[field.key] || ""}
+                          onChange={(e) =>
+                            setCredentials({ ...credentials, [field.key]: e.target.value })
+                          }
+                        />
+                      </div>
+                    ))}
+                    {currentProvider.type === "api" && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        API credentials are encrypted before storage
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button
+                  onClick={handleAddPaymentMethod}
+                  disabled={!selectedProvider || addMutation.isPending}
+                >
+                  {addMutation.isPending ? "Adding..." : "Add Payment Method"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <CardDescription>
+          Manage your payment options. Add payment links or connect payment processors.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        ) : paymentMethods.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">
+            No payment methods configured. Click "Add Payment Method" to get started.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {paymentMethods.map((method) => {
+              const provider = PAYMENT_PROVIDERS[method.providerType as PaymentProviderType];
+              return (
+                <div
+                  key={method.id}
+                  className="flex items-center justify-between p-4 border rounded-lg bg-card"
+                >
+                  <div className="flex items-center gap-3">
+                    {provider?.type === "api" ? (
+                      <Lock className="h-5 w-5 text-primary" />
+                    ) : (
+                      <LinkIcon className="h-5 w-5 text-primary" />
+                    )}
+                    <div>
+                      <p className="font-medium">{method.displayName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {provider?.type === "api" ? (
+                          <span className="flex items-center gap-1">
+                            <Lock className="h-3 w-3" /> API credentials configured
+                          </span>
+                        ) : (
+                          method.paymentLink || "No link configured"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => deleteMutation.mutate(method.id)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 type SettingsFormData = z.infer<typeof settingsFormSchema>;
 
@@ -54,10 +271,6 @@ export default function AdminSettings() {
       tagline: "",
       aboutText: "",
       heroImageUrl: "",
-      cashappLink: "",
-      chimeLink: "",
-      applepayLink: "",
-      venmoLink: "",
       contactEmail: "",
       contactPhone: "",
       address: "",
@@ -73,10 +286,6 @@ export default function AdminSettings() {
         tagline: settings.tagline || "",
         aboutText: settings.aboutText || "",
         heroImageUrl: settings.heroImageUrl || "",
-        cashappLink: settings.cashappLink || "",
-        chimeLink: settings.chimeLink || "",
-        applepayLink: settings.applepayLink || "",
-        venmoLink: settings.venmoLink || "",
         contactEmail: settings.contactEmail || "",
         contactPhone: settings.contactPhone || "",
         address: settings.address || "",
@@ -220,90 +429,7 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-primary" />
-                <CardTitle className="font-serif text-lg">Payment Links</CardTitle>
-              </div>
-              <CardDescription>
-                Add your payment links. Clients will be redirected to these links to complete payment.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="cashappLink"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cash App Link</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://cash.app/$yourusername"
-                        {...field}
-                        data-testid="input-cashapp"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="venmoLink"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Venmo Link</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://venmo.com/yourusername"
-                        {...field}
-                        data-testid="input-venmo"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="chimeLink"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Chime Link</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Your Chime payment link"
-                        {...field}
-                        data-testid="input-chime"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="applepayLink"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apple Pay Link</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Your Apple Pay link"
-                        {...field}
-                        data-testid="input-applepay"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+          <PaymentMethodsSection />
 
           <Card>
             <CardHeader>

@@ -151,13 +151,14 @@ export default function Booking() {
     });
   };
 
+  const { data: paymentMethods = [] } = useQuery<Array<{ id: number; displayName: string; paymentLink: string | null; hasCredentials: boolean }>>({
+    queryKey: ["/api/payment-methods/active"],
+  });
+
   const getPaymentLinks = () => {
-    const links = [];
-    if (settings?.cashappLink) links.push({ name: "Cash App", url: settings.cashappLink });
-    if (settings?.venmoLink) links.push({ name: "Venmo", url: settings.venmoLink });
-    if (settings?.chimeLink) links.push({ name: "Chime", url: settings.chimeLink });
-    if (settings?.applepayLink) links.push({ name: "Apple Pay", url: settings.applepayLink });
-    return links;
+    return paymentMethods
+      .filter(m => m.paymentLink)
+      .map(m => ({ name: m.displayName, url: m.paymentLink! }));
   };
 
   const canProceedFromService = !!selectedServiceId;
