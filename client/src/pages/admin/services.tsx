@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUpload } from "@/hooks/use-upload";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Clock, DollarSign, Image as ImageIcon, X, Sun, Moon, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, DollarSign, Image as ImageIcon, X, Sun, Moon, Users, Upload, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Service, InsertService, GalleryItem } from "@shared/schema";
 
@@ -63,6 +64,7 @@ type ServiceFormData = z.infer<typeof serviceFormSchema>;
 export default function AdminServices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const { data: services, isLoading } = useQuery<Service[]>({
@@ -74,6 +76,30 @@ export default function AdminServices() {
   });
 
   const imageGalleryItems = galleryItems?.filter(item => item.mediaType === "image") || [];
+
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      form.setValue("imageUrl", response.objectPath);
+      toast({ title: "Image uploaded successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Invalid file", description: "Please select an image file", variant: "destructive" });
+        return;
+      }
+      await uploadFile(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(serviceFormSchema),
@@ -316,36 +342,66 @@ export default function AdminServices() {
                           </button>
                         </div>
                       )}
-                      {imageGalleryItems.length > 0 ? (
-                        <ScrollArea className="h-32 border rounded-md p-2">
-                          <div className="flex gap-2 flex-wrap">
-                            {imageGalleryItems.map((item) => (
-                              <button
-                                key={item.id}
-                                type="button"
-                                onClick={() => field.onChange(item.mediaUrl)}
-                                className={`relative w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
-                                  field.value === item.mediaUrl
-                                    ? "border-primary ring-2 ring-primary/50"
-                                    : "border-transparent hover:border-muted-foreground/50"
-                                }`}
-                                data-testid={`button-select-gallery-${item.id}`}
-                              >
-                                <img
-                                  src={item.mediaUrl}
-                                  alt={item.title || "Portfolio image"}
-                                  className="w-full h-full object-cover"
-                                />
-                              </button>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      ) : (
-                        <div className="border rounded-md p-4 text-center text-muted-foreground text-sm">
-                          <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>No images in portfolio yet.</p>
-                          <p className="text-xs mt-1">Upload images in the Portfolio section first.</p>
-                        </div>
+                      
+                      {/* Upload new image button */}
+                      <div className="mb-3">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileSelect}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="w-full"
+                        >
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload New Image
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Or select from portfolio */}
+                      {imageGalleryItems.length > 0 && (
+                        <>
+                          <p className="text-xs text-muted-foreground mb-2">Or select from portfolio:</p>
+                          <ScrollArea className="h-24 border rounded-md p-2">
+                            <div className="flex gap-2 flex-wrap">
+                              {imageGalleryItems.map((item) => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => field.onChange(item.mediaUrl)}
+                                  className={`relative w-14 h-14 rounded-md overflow-hidden border-2 transition-all ${
+                                    field.value === item.mediaUrl
+                                      ? "border-primary ring-2 ring-primary/50"
+                                      : "border-transparent hover:border-muted-foreground/50"
+                                  }`}
+                                  data-testid={`button-select-gallery-${item.id}`}
+                                >
+                                  <img
+                                    src={item.mediaUrl}
+                                    alt={item.title || "Portfolio image"}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </>
                       )}
                       <FormMessage />
                     </FormItem>
