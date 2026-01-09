@@ -13,7 +13,10 @@ import {
   insertPortfolioMediaSchema,
   insertDisplayModeSettingsSchema,
   AVAILABLE_FONTS,
+  PAYMENT_PROVIDERS,
+  type PaymentProviderType,
 } from "@shared/schema";
+import { encrypt, decrypt, isEncryptionKeySet } from "./encryption";
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
@@ -636,6 +639,138 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting custom font:", error);
       res.status(500).json({ message: "Failed to delete custom font" });
+    }
+  });
+
+  // Payment Methods API
+  app.get("/api/payment-providers", async (req, res) => {
+    res.json(PAYMENT_PROVIDERS);
+  });
+
+  app.get("/api/payment-methods", async (req, res) => {
+    try {
+      const methods = await storage.getPaymentMethods();
+      const sanitizedMethods = methods.map(method => ({
+        ...method,
+        encryptedCredentials: method.encryptedCredentials ? "[ENCRYPTED]" : null,
+      }));
+      res.json(sanitizedMethods);
+    } catch (error) {
+      console.error("Error fetching payment methods:", error);
+      res.status(500).json({ message: "Failed to fetch payment methods" });
+    }
+  });
+
+  app.get("/api/payment-methods/active", async (req, res) => {
+    try {
+      const methods = await storage.getPaymentMethods();
+      const activeMethods = methods
+        .filter(m => m.isActive)
+        .map(method => ({
+          id: method.id,
+          providerType: method.providerType,
+          displayName: method.displayName,
+          paymentLink: method.paymentLink,
+          hasCredentials: !!method.encryptedCredentials,
+        }));
+      res.json(activeMethods);
+    } catch (error) {
+      console.error("Error fetching active payment methods:", error);
+      res.status(500).json({ message: "Failed to fetch payment methods" });
+    }
+  });
+
+  app.post("/api/payment-methods", isAdminAuthenticated, async (req, res) => {
+    try {
+      const { providerType, credentials } = req.body;
+      
+      if (!providerType || !(providerType in PAYMENT_PROVIDERS)) {
+        return res.status(400).json({ message: "Invalid provider type" });
+      }
+
+      const provider = PAYMENT_PROVIDERS[providerType as PaymentProviderType];
+      let encryptedCredentials: string | null = null;
+      let paymentLink: string | null = null;
+
+      if (provider.type === "link") {
+        paymentLink = credentials?.url || null;
+      } else if (provider.type === "api") {
+        if (!isEncryptionKeySet()) {
+          return res.status(400).json({ 
+            message: "ENCRYPTION_KEY is not set. Please set it in your environment secrets before adding API-based payment methods." 
+          });
+        }
+        encryptedCredentials = encrypt(JSON.stringify(credentials));
+      }
+
+      const method = await storage.createPaymentMethod({
+        providerType,
+        displayName: provider.name,
+        isActive: true,
+        paymentLink,
+        encryptedCredentials,
+        sortOrder: 0,
+      });
+
+      res.status(201).json({
+        ...method,
+        encryptedCredentials: method.encryptedCredentials ? "[ENCRYPTED]" : null,
+      });
+    } catch (error) {
+      console.error("Error creating payment method:", error);
+      res.status(500).json({ message: "Failed to create payment method" });
+    }
+  });
+
+  app.put("/api/payment-methods/:id", isAdminAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { credentials, isActive } = req.body;
+      
+      const existingMethod = await storage.getPaymentMethod(id);
+      if (!existingMethod) {
+        return res.status(404).json({ message: "Payment method not found" });
+      }
+
+      const updateData: any = {};
+      
+      if (isActive !== undefined) {
+        updateData.isActive = isActive;
+      }
+
+      if (credentials) {
+        const provider = PAYMENT_PROVIDERS[existingMethod.providerType as PaymentProviderType];
+        if (provider.type === "link") {
+          updateData.paymentLink = credentials?.url || null;
+        } else if (provider.type === "api") {
+          if (!isEncryptionKeySet()) {
+            return res.status(400).json({ 
+              message: "ENCRYPTION_KEY is not set." 
+            });
+          }
+          updateData.encryptedCredentials = encrypt(JSON.stringify(credentials));
+        }
+      }
+
+      const method = await storage.updatePaymentMethod(id, updateData);
+      res.json({
+        ...method,
+        encryptedCredentials: method?.encryptedCredentials ? "[ENCRYPTED]" : null,
+      });
+    } catch (error) {
+      console.error("Error updating payment method:", error);
+      res.status(500).json({ message: "Failed to update payment method" });
+    }
+  });
+
+  app.delete("/api/payment-methods/:id", isAdminAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePaymentMethod(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting payment method:", error);
+      res.status(500).json({ message: "Failed to delete payment method" });
     }
   });
 
