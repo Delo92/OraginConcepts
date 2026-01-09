@@ -37,7 +37,9 @@ export function registerObjectStorageRoutes(app: Express): void {
       req.on('end', async () => {
         try {
           const fileBuffer = Buffer.concat(chunks);
-          const fileName = req.headers['x-file-name'] as string || 'upload';
+          // Decode file name (may be URI-encoded for special characters)
+          const rawFileName = req.headers['x-file-name'] as string || 'upload';
+          const fileName = decodeURIComponent(rawFileName);
           const contentType = req.headers['content-type'] || 'application/octet-stream';
           
           const objectPath = await objectStorageService.uploadFile(fileBuffer, fileName, contentType);

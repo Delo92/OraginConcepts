@@ -31,11 +31,14 @@ export function useUpload(options: UseUploadOptions = {}) {
       try {
         setProgress(10);
         
+        // Encode file name to handle special characters (emojis, accents, etc.)
+        const safeFileName = encodeURIComponent(file.name);
+        
         const response = await fetch("/api/uploads/file", {
           method: "POST",
           headers: {
             "Content-Type": file.type || "application/octet-stream",
-            "X-File-Name": file.name,
+            "X-File-Name": safeFileName,
           },
           body: file,
         });
@@ -71,12 +74,15 @@ export function useUpload(options: UseUploadOptions = {}) {
       url: string;
       headers?: Record<string, string>;
     }> => {
+      // Encode file name to handle special characters
+      const safeFileName = encodeURIComponent(file.name);
+      
       return {
         method: "PUT",
         url: "/api/uploads/file",
         headers: { 
           "Content-Type": file.type || "application/octet-stream",
-          "X-File-Name": file.name,
+          "X-File-Name": safeFileName,
         },
       };
     },
