@@ -6,12 +6,14 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { useDisplayMode } from "@/contexts/display-mode-context";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
+import { Sun, Moon } from "lucide-react";
 import type { Service } from "@shared/schema";
 
+type FilterMode = "all" | "yin" | "yang";
+
 export default function Services() {
-  const { displayMode } = useDisplayMode();
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
   
   const { data: services, isLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
@@ -19,10 +21,17 @@ export default function Services() {
 
   const filteredServices = useMemo(() => {
     if (!services) return [];
-    return services.filter(
-      (s) => s.isActive && (s.displayMode === displayMode || s.displayMode === "both")
+    const activeServices = services.filter((s) => s.isActive);
+    if (filterMode === "all") return activeServices;
+    if (filterMode === "yin") {
+      return activeServices.filter(
+        (s) => s.displayMode === "professional" || s.displayMode === "both"
+      );
+    }
+    return activeServices.filter(
+      (s) => s.displayMode === "edge" || s.displayMode === "both"
     );
-  }, [services, displayMode]);
+  }, [services, filterMode]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,9 +42,39 @@ export default function Services() {
           <h1 className="font-serif text-4xl md:text-5xl font-light mb-4" data-testid="text-services-page-title">
             Our Services
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg mb-6">
             Explore our range of creative services designed to bring your ideas to life.
           </p>
+          
+          {/* Yin/Yang Filter Buttons */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant={filterMode === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterMode("all")}
+              className="rounded-full px-4"
+            >
+              All Services
+            </Button>
+            <Button
+              variant={filterMode === "yin" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterMode("yin")}
+              className="rounded-full px-4 gap-2"
+            >
+              <Sun className="h-4 w-4" />
+              Yin
+            </Button>
+            <Button
+              variant={filterMode === "yang" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterMode("yang")}
+              className="rounded-full px-4 gap-2"
+            >
+              <Moon className="h-4 w-4" />
+              Yang
+            </Button>
+          </div>
         </div>
       </section>
 

@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Heart, ExternalLink, Sun, Moon } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useDisplayMode } from "@/contexts/display-mode-context";
 import type { GalleryItem, SiteSettings } from "@shared/schema";
+
+type FilterMode = "all" | "yin" | "yang";
 
 export default function Gallery() {
   const [showTipDialog, setShowTipDialog] = useState(false);
-  const { displayMode } = useDisplayMode();
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
     queryKey: ["/api/gallery"],
@@ -26,10 +27,16 @@ export default function Gallery() {
 
   const filteredItems = useMemo(() => {
     if (!galleryItems) return [];
+    if (filterMode === "all") return galleryItems;
+    if (filterMode === "yin") {
+      return galleryItems.filter(
+        (item) => item.displayMode === "professional" || item.displayMode === "both"
+      );
+    }
     return galleryItems.filter(
-      (item) => item.displayMode === displayMode || item.displayMode === "both"
+      (item) => item.displayMode === "edge" || item.displayMode === "both"
     );
-  }, [galleryItems, displayMode]);
+  }, [galleryItems, filterMode]);
 
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/settings"],
@@ -81,6 +88,35 @@ export default function Gallery() {
               Explore our creative work — websites, videos, mockups, and more.
             </p>
             
+            {/* Yin/Yang Filter Buttons */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Button
+                variant={filterMode === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterMode("all")}
+                className="rounded-full px-4"
+              >
+                All Work
+              </Button>
+              <Button
+                variant={filterMode === "yin" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterMode("yin")}
+                className="rounded-full px-4 gap-2"
+              >
+                <Sun className="h-4 w-4" />
+                Yin
+              </Button>
+              <Button
+                variant={filterMode === "yang" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterMode("yang")}
+                className="rounded-full px-4 gap-2"
+              >
+                <Moon className="h-4 w-4" />
+                Yang
+              </Button>
+            </div>
             
             {getPaymentLinks().length > 0 && (
               <Button
@@ -128,18 +164,22 @@ export default function Gallery() {
           ) : (
             <div className="text-center py-16">
               <div className="mb-4">
-                {displayMode === "professional" ? (
+                {filterMode === "yin" ? (
                   <Sun className="h-12 w-12 text-muted-foreground/50 mx-auto" />
-                ) : (
+                ) : filterMode === "yang" ? (
                   <Moon className="h-12 w-12 text-muted-foreground/50 mx-auto" />
-                )}
+                ) : null}
               </div>
               <p className="text-muted-foreground">
-                No {displayMode === "professional" ? "professional" : "edge"} projects yet.
+                {filterMode === "all" 
+                  ? "No projects yet." 
+                  : `No ${filterMode === "yin" ? "Yin" : "Yang"} projects yet.`}
               </p>
-              <p className="text-muted-foreground/70 text-sm mt-2">
-                Try switching to the other view to see more work.
-              </p>
+              {filterMode !== "all" && (
+                <p className="text-muted-foreground/70 text-sm mt-2">
+                  Try switching to see more work.
+                </p>
+              )}
             </div>
           )}
         </div>
