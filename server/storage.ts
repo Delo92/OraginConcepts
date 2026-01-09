@@ -5,6 +5,7 @@ import {
   blockedDates,
   siteSettings,
   galleryItems,
+  portfolioMedia,
   type Service,
   type InsertService,
   type Booking,
@@ -17,6 +18,8 @@ import {
   type InsertSiteSettings,
   type GalleryItem,
   type InsertGalleryItem,
+  type PortfolioMedia,
+  type InsertPortfolioMedia,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -55,6 +58,12 @@ export interface IStorage {
   updateGalleryItem(id: number, item: Partial<InsertGalleryItem>): Promise<GalleryItem | undefined>;
   deleteGalleryItem(id: number): Promise<boolean>;
   setHeroGalleryItem(id: number): Promise<GalleryItem | undefined>;
+
+  getPortfolioMedia(projectId: number): Promise<PortfolioMedia[]>;
+  createPortfolioMedia(media: InsertPortfolioMedia): Promise<PortfolioMedia>;
+  updatePortfolioMedia(id: number, media: Partial<InsertPortfolioMedia>): Promise<PortfolioMedia | undefined>;
+  deletePortfolioMedia(id: number): Promise<boolean>;
+  reorderPortfolioMedia(projectId: number, mediaIds: number[]): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -200,6 +209,36 @@ export class DatabaseStorage implements IStorage {
     await db.update(galleryItems).set({ isHero: false }).where(eq(galleryItems.isHero, true));
     const [updated] = await db.update(galleryItems).set({ isHero: true }).where(eq(galleryItems.id, id)).returning();
     return updated;
+  }
+
+  async getPortfolioMedia(projectId: number): Promise<PortfolioMedia[]> {
+    return db.select().from(portfolioMedia)
+      .where(eq(portfolioMedia.projectId, projectId))
+      .orderBy(portfolioMedia.sortOrder);
+  }
+
+  async createPortfolioMedia(media: InsertPortfolioMedia): Promise<PortfolioMedia> {
+    const [newMedia] = await db.insert(portfolioMedia).values(media).returning();
+    return newMedia;
+  }
+
+  async updatePortfolioMedia(id: number, media: Partial<InsertPortfolioMedia>): Promise<PortfolioMedia | undefined> {
+    const [updated] = await db.update(portfolioMedia).set(media).where(eq(portfolioMedia.id, id)).returning();
+    return updated;
+  }
+
+  async deletePortfolioMedia(id: number): Promise<boolean> {
+    await db.delete(portfolioMedia).where(eq(portfolioMedia.id, id));
+    return true;
+  }
+
+  async reorderPortfolioMedia(projectId: number, mediaIds: number[]): Promise<boolean> {
+    for (let i = 0; i < mediaIds.length; i++) {
+      await db.update(portfolioMedia)
+        .set({ sortOrder: i })
+        .where(and(eq(portfolioMedia.id, mediaIds[i]), eq(portfolioMedia.projectId, projectId)));
+    }
+    return true;
   }
 }
 

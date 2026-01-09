@@ -130,3 +130,21 @@ export const insertGalleryItemSchema = createInsertSchema(galleryItems).omit({
 
 export type InsertGalleryItem = z.infer<typeof insertGalleryItemSchema>;
 export type GalleryItem = typeof galleryItems.$inferSelect;
+
+export const portfolioMedia = pgTable("portfolio_media", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  projectId: integer("project_id").notNull().references(() => galleryItems.id, { onDelete: "cascade" }),
+  title: text("title"),
+  mediaUrl: text("media_url").notNull(),
+  mediaType: text("media_type").notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPortfolioMediaSchema = createInsertSchema(portfolioMedia).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPortfolioMedia = z.infer<typeof insertPortfolioMediaSchema>;
+export type PortfolioMedia = typeof portfolioMedia.$inferSelect;
