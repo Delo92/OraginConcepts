@@ -12,6 +12,7 @@ export const services = pgTable("services", {
   duration: integer("duration").notNull(),
   price: integer("price").notNull(),
   imageUrl: text("image_url"),
+  displayMode: text("display_mode").notNull().default("both"),
   isActive: boolean("is_active").default(true).notNull(),
   sortOrder: integer("sort_order").default(0).notNull(),
 });

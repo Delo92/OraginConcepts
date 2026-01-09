@@ -36,7 +36,14 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Pencil, Trash2, Clock, DollarSign, Image as ImageIcon, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Pencil, Trash2, Clock, DollarSign, Image as ImageIcon, X, Sun, Moon, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Service, InsertService, GalleryItem } from "@shared/schema";
 
@@ -46,6 +53,7 @@ const serviceFormSchema = z.object({
   duration: z.number().min(15, "Minimum 15 minutes").max(480, "Maximum 8 hours"),
   price: z.number().min(1, "Minimum $1.00"),
   imageUrl: z.string().optional().or(z.literal("")),
+  displayMode: z.string().default("both"),
   isActive: z.boolean(),
   sortOrder: z.number(),
 });
@@ -75,6 +83,7 @@ export default function AdminServices() {
       duration: 60,
       price: 80,
       imageUrl: "",
+      displayMode: "both",
       isActive: true,
       sortOrder: 0,
     },
@@ -132,6 +141,7 @@ export default function AdminServices() {
         duration: service.duration,
         price: service.price / 100,
         imageUrl: service.imageUrl || "",
+        displayMode: service.displayMode || "both",
         isActive: service.isActive,
         sortOrder: service.sortOrder,
       });
@@ -143,6 +153,7 @@ export default function AdminServices() {
         duration: 60,
         price: 80,
         imageUrl: "",
+        displayMode: "both",
         isActive: true,
         sortOrder: (services?.length || 0) + 1,
       });
@@ -336,6 +347,45 @@ export default function AdminServices() {
                           <p className="text-xs mt-1">Upload images in the Portfolio section first.</p>
                         </div>
                       )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="displayMode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Mode</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "both"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select display mode" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="professional">
+                            <div className="flex items-center gap-2">
+                              <Sun className="h-4 w-4" />
+                              <span>Professional (Light)</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="edge">
+                            <div className="flex items-center gap-2">
+                              <Moon className="h-4 w-4" />
+                              <span>Edge (Dark)</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="both">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              <span>Both Modes</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Choose which portfolio view this service appears in</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

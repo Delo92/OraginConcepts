@@ -13,13 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Heart, ExternalLink, Sun, Moon } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useDisplayMode } from "@/contexts/display-mode-context";
 import type { GalleryItem, SiteSettings } from "@shared/schema";
-
-type DisplayMode = "professional" | "edge";
 
 export default function Gallery() {
   const [showTipDialog, setShowTipDialog] = useState(false);
-  const [displayMode, setDisplayMode] = useState<DisplayMode>("professional");
+  const { displayMode } = useDisplayMode();
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
     queryKey: ["/api/gallery"],
@@ -82,34 +81,6 @@ export default function Gallery() {
               Explore our creative work — websites, videos, mockups, and more.
             </p>
             
-            <div className="flex items-center justify-center gap-2 mb-8">
-              <Button
-                size="lg"
-                variant={displayMode === "professional" ? "default" : "outline"}
-                onClick={() => setDisplayMode("professional")}
-                className={`rounded-full px-6 transition-all ${
-                  displayMode === "professional" 
-                    ? "bg-gradient-to-r from-amber-100 to-amber-50 text-amber-900 hover:from-amber-200 hover:to-amber-100 border-amber-300" 
-                    : ""
-                }`}
-              >
-                <Sun className="h-5 w-5 mr-2" />
-                Professional
-              </Button>
-              <Button
-                size="lg"
-                variant={displayMode === "edge" ? "default" : "outline"}
-                onClick={() => setDisplayMode("edge")}
-                className={`rounded-full px-6 transition-all ${
-                  displayMode === "edge" 
-                    ? "bg-gradient-to-r from-slate-800 to-slate-900 text-slate-100 hover:from-slate-700 hover:to-slate-800" 
-                    : ""
-                }`}
-              >
-                <Moon className="h-5 w-5 mr-2" />
-                Edge
-              </Button>
-            </div>
             
             {getPaymentLinks().length > 0 && (
               <Button

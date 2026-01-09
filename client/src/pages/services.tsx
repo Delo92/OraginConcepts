@@ -6,14 +6,23 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
+import { useDisplayMode } from "@/contexts/display-mode-context";
+import { useMemo } from "react";
 import type { Service } from "@shared/schema";
 
 export default function Services() {
+  const { displayMode } = useDisplayMode();
+  
   const { data: services, isLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
 
-  const activeServices = services?.filter(s => s.isActive) || [];
+  const filteredServices = useMemo(() => {
+    if (!services) return [];
+    return services.filter(
+      (s) => s.isActive && (s.displayMode === displayMode || s.displayMode === "both")
+    );
+  }, [services, displayMode]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,9 +59,9 @@ export default function Services() {
                 </Card>
               ))}
             </div>
-          ) : activeServices.length > 0 ? (
+          ) : filteredServices.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {activeServices.map((service) => (
+              {filteredServices.map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}
             </div>

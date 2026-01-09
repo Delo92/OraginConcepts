@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { DisplayModeProvider } from "@/contexts/display-mode-context";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { AdminLayout } from "@/components/admin-layout";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,10 +93,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <DisplayModeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </DisplayModeProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
