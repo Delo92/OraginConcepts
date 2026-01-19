@@ -9,6 +9,7 @@ import {
   displayModeSettings,
   customFonts,
   paymentMethods,
+  emailTemplates,
   type Service,
   type InsertService,
   type Booking,
@@ -29,6 +30,8 @@ import {
   type InsertCustomFont,
   type PaymentMethod,
   type InsertPaymentMethod,
+  type EmailTemplate,
+  type InsertEmailTemplate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -88,6 +91,10 @@ export interface IStorage {
   createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod>;
   updatePaymentMethod(id: number, method: Partial<InsertPaymentMethod>): Promise<PaymentMethod | undefined>;
   deletePaymentMethod(id: number): Promise<boolean>;
+
+  getEmailTemplates(): Promise<EmailTemplate[]>;
+  getEmailTemplate(templateType: string): Promise<EmailTemplate | undefined>;
+  upsertEmailTemplate(templateType: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -331,6 +338,31 @@ export class DatabaseStorage implements IStorage {
   async deletePaymentMethod(id: number): Promise<boolean> {
     await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
     return true;
+  }
+
+  async getEmailTemplates(): Promise<EmailTemplate[]> {
+    return db.select().from(emailTemplates);
+  }
+
+  async getEmailTemplate(templateType: string): Promise<EmailTemplate | undefined> {
+    const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.templateType, templateType));
+    return template;
+  }
+
+  async upsertEmailTemplate(templateType: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate> {
+    const existing = await this.getEmailTemplate(templateType);
+    if (existing) {
+      const [updated] = await db.update(emailTemplates)
+        .set({ ...template, updatedAt: new Date() })
+        .where(eq(emailTemplates.templateType, templateType))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(emailTemplates)
+        .values({ templateType, subject: template.subject || '', body: template.body || '', ...template })
+        .returning();
+      return created;
+    }
   }
 }
 

@@ -191,6 +191,61 @@ export async function registerRoutes(
     try {
       const data = insertBookingSchema.parse(req.body);
       const booking = await storage.createBooking(data);
+      
+      // Send confirmation emails asynchronously
+      (async () => {
+        try {
+          const { sendEmail, replaceTemplateVariables } = await import("./gmail-service");
+          const service = await storage.getService(booking.serviceId);
+          const settings = await storage.getSettings();
+          
+          const formatPrice = (cents: number) => `$${(cents / 100).toFixed(0)}`;
+          const formatDate = (dateStr: string) => {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          };
+          const formatTime = (timeStr: string) => {
+            const [hours, minutes] = timeStr.split(':');
+            const hour = parseInt(hours, 10);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+          };
+
+          const variables = {
+            clientName: booking.clientName,
+            clientEmail: booking.clientEmail,
+            clientPhone: booking.clientPhone,
+            services: service?.name || 'Service',
+            bookingDate: formatDate(booking.bookingDate),
+            bookingTime: formatTime(booking.bookingTime),
+            totalPrice: service ? formatPrice(service.price) : '$0',
+            notes: booking.notes || 'None',
+            businessName: settings?.businessName || 'Oraginal Concepts'
+          };
+
+          // Send client confirmation email
+          const clientTemplate = await storage.getEmailTemplate('booking_confirmation');
+          if (clientTemplate?.isActive) {
+            const subject = replaceTemplateVariables(clientTemplate.subject, variables);
+            const body = replaceTemplateVariables(clientTemplate.body, variables);
+            await sendEmail({ to: booking.clientEmail, subject, htmlBody: body });
+            console.log(`Confirmation email sent to ${booking.clientEmail}`);
+          }
+
+          // Send admin notification email
+          const adminTemplate = await storage.getEmailTemplate('admin_notification');
+          if (adminTemplate?.isActive && settings?.contactEmail) {
+            const subject = replaceTemplateVariables(adminTemplate.subject, variables);
+            const body = replaceTemplateVariables(adminTemplate.body, variables);
+            await sendEmail({ to: settings.contactEmail, subject, htmlBody: body });
+            console.log(`Admin notification sent to ${settings.contactEmail}`);
+          }
+        } catch (emailError) {
+          console.error("Error sending booking emails:", emailError);
+        }
+      })();
+      
       res.status(201).json(booking);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -995,6 +1050,121 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating order status:", error);
       res.status(500).json({ message: "Failed to update order status" });
+    }
+  });
+
+  // ============ EMAIL TEMPLATES ENDPOINTS ============
+
+  app.get("/api/admin/email-templates", isAdminAuthenticated, async (req, res) => {
+    try {
+      const templates = await storage.getEmailTemplates();
+      
+      // Return default templates if none exist
+      const defaultTemplates = [
+        {
+          templateType: "booking_confirmation",
+          subject: "Booking Confirmation - {{businessName}}",
+          body: `<h2>Thank you for your booking, {{clientName}}!</h2>
+<p>Your project request has been received.</p>
+<h3>Booking Details:</h3>
+<ul>
+  <li><strong>Services:</strong> {{services}}</li>
+  <li><strong>Date:</strong> {{bookingDate}}</li>
+  <li><strong>Time:</strong> {{bookingTime}}</li>
+  <li><strong>Total:</strong> {{totalPrice}}</li>
+</ul>
+<p>We'll be in touch shortly to confirm your appointment.</p>
+<p>Best regards,<br>{{businessName}}</p>`,
+          isActive: true
+        },
+        {
+          templateType: "admin_notification",
+          subject: "New Booking Request from {{clientName}}",
+          body: `<h2>New Booking Request</h2>
+<h3>Client Information:</h3>
+<ul>
+  <li><strong>Name:</strong> {{clientName}}</li>
+  <li><strong>Email:</strong> {{clientEmail}}</li>
+  <li><strong>Phone:</strong> {{clientPhone}}</li>
+</ul>
+<h3>Booking Details:</h3>
+<ul>
+  <li><strong>Services:</strong> {{services}}</li>
+  <li><strong>Date:</strong> {{bookingDate}}</li>
+  <li><strong>Time:</strong> {{bookingTime}}</li>
+  <li><strong>Total:</strong> {{totalPrice}}</li>
+  <li><strong>Notes:</strong> {{notes}}</li>
+</ul>`,
+          isActive: true
+        }
+      ];
+
+      // Merge existing templates with defaults
+      const result = defaultTemplates.map(defaultTemplate => {
+        const existing = templates.find(t => t.templateType === defaultTemplate.templateType);
+        return existing || defaultTemplate;
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching email templates:", error);
+      res.status(500).json({ message: "Failed to fetch email templates" });
+    }
+  });
+
+  app.put("/api/admin/email-templates/:templateType", isAdminAuthenticated, async (req, res) => {
+    try {
+      const { templateType } = req.params;
+      const { subject, body, isActive } = req.body;
+      
+      const template = await storage.upsertEmailTemplate(templateType, { subject, body, isActive });
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating email template:", error);
+      res.status(500).json({ message: "Failed to update email template" });
+    }
+  });
+
+  // Send test email endpoint
+  app.post("/api/admin/email-templates/test", isAdminAuthenticated, async (req, res) => {
+    try {
+      const { to, templateType } = req.body;
+      const { sendEmail } = await import("./gmail-service");
+      
+      const template = await storage.getEmailTemplate(templateType);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      const testVariables: Record<string, string> = {
+        clientName: "Test Client",
+        services: "Test Service",
+        bookingDate: "January 20, 2026",
+        bookingTime: "10:00 AM",
+        totalPrice: "$100",
+        businessName: "Oraginal Concepts",
+        clientEmail: to,
+        clientPhone: "(555) 123-4567",
+        notes: "This is a test email"
+      };
+
+      let subject = template.subject;
+      let body = template.body;
+      for (const [key, value] of Object.entries(testVariables)) {
+        subject = subject.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        body = body.replace(new RegExp(`{{${key}}}`, 'g'), value);
+      }
+
+      const success = await sendEmail({ to, subject, htmlBody: body });
+      
+      if (success) {
+        res.json({ success: true, message: "Test email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send test email" });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ message: "Failed to send test email" });
     }
   });
 

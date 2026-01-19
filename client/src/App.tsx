@@ -24,6 +24,7 @@ import AdminSettings from "@/pages/admin/settings";
 import AdminGallery from "@/pages/admin/gallery";
 import AdminProjectMedia from "@/pages/admin/project-media";
 import AdminAppearance from "@/pages/admin/appearance";
+import AdminEmailTemplates from "@/pages/admin/email-templates";
 
 function AdminRoutes() {
   const { isAdmin, isLoading } = useAdminAuth();
@@ -62,6 +63,7 @@ function AdminRoutes() {
         <Route path="/admin/gallery" component={AdminGallery} />
         <Route path="/admin/projects/:projectId" component={AdminProjectMedia} />
         <Route path="/admin/appearance" component={AdminAppearance} />
+        <Route path="/admin/email-templates" component={AdminEmailTemplates} />
         <Route path="/admin/settings" component={AdminSettings} />
         <Route component={NotFound} />
       </Switch>

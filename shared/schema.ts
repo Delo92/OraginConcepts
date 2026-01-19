@@ -358,3 +358,20 @@ export const AVAILABLE_FONTS = {
     { name: "Source Code Pro", family: "'Source Code Pro', monospace", style: "mono" },
   ],
 };
+
+export const emailTemplates = pgTable("email_templates", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  templateType: text("template_type").notNull().unique(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
