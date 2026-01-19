@@ -22,6 +22,9 @@ import { encrypt, decrypt, isEncryptionKeySet } from "./encryption";
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { seedDatabaseIfEmpty } from "./seed";
+import { firestoreStorage, type CartItem } from "./firestore-storage";
+import { initializeFirebaseAdmin } from "./firebase";
+import { createCalendarEvent, isCalendarConnected } from "./google-calendar";
 
 declare module "express-session" {
   interface SessionData {
@@ -790,6 +793,208 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting payment method:", error);
       res.status(500).json({ message: "Failed to delete payment method" });
+    }
+  });
+
+  // Initialize Firebase for cart functionality
+  initializeFirebaseAdmin();
+
+  // ============ CART ENDPOINTS ============
+  
+  // Get cart for visitor
+  app.get("/api/cart/:visitorId", async (req, res) => {
+    try {
+      const { visitorId } = req.params;
+      const cart = await firestoreStorage.getCart(visitorId);
+      res.json(cart);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+      res.status(500).json({ message: "Failed to fetch cart" });
+    }
+  });
+
+  // Add item to cart
+  app.post("/api/cart/:visitorId/add", async (req, res) => {
+    try {
+      const { visitorId } = req.params;
+      const { serviceId, serviceName, price, quantity, scheduledDate, scheduledTime } = req.body;
+      
+      if (!serviceId || !serviceName || !price) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const cart = await firestoreStorage.addToCart(visitorId, {
+        serviceId,
+        serviceName,
+        price,
+        quantity: quantity || 1,
+        scheduledDate,
+        scheduledTime
+      });
+      
+      res.json(cart);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      res.status(500).json({ message: "Failed to add to cart" });
+    }
+  });
+
+  // Update cart item quantity
+  app.put("/api/cart/:visitorId/item/:itemId", async (req, res) => {
+    try {
+      const { visitorId, itemId } = req.params;
+      const { quantity } = req.body;
+      
+      const cart = await firestoreStorage.updateCartItem(visitorId, itemId, quantity);
+      res.json(cart);
+    } catch (error) {
+      console.error("Error updating cart item:", error);
+      res.status(500).json({ message: "Failed to update cart item" });
+    }
+  });
+
+  // Remove item from cart
+  app.delete("/api/cart/:visitorId/item/:itemId", async (req, res) => {
+    try {
+      const { visitorId, itemId } = req.params;
+      const cart = await firestoreStorage.removeFromCart(visitorId, itemId);
+      res.json(cart);
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+      res.status(500).json({ message: "Failed to remove from cart" });
+    }
+  });
+
+  // Clear cart
+  app.delete("/api/cart/:visitorId", async (req, res) => {
+    try {
+      const { visitorId } = req.params;
+      await firestoreStorage.clearCart(visitorId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      res.status(500).json({ message: "Failed to clear cart" });
+    }
+  });
+
+  // ============ CHECKOUT ENDPOINT ============
+  
+  app.post("/api/checkout", async (req, res) => {
+    try {
+      const { 
+        visitorId, 
+        clientName, 
+        clientEmail, 
+        clientPhone, 
+        paymentMethod,
+        notes 
+      } = req.body;
+
+      if (!visitorId || !clientName || !clientEmail) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Get cart
+      const cart = await firestoreStorage.getCart(visitorId);
+      if (cart.items.length === 0) {
+        return res.status(400).json({ message: "Cart is empty" });
+      }
+
+      // Calculate total
+      const total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      // Create order and bookings in Firebase
+      const { orderId, bookings: createdBookings } = await firestoreStorage.createOrder({
+        visitorId,
+        clientName,
+        clientEmail,
+        clientPhone,
+        items: cart.items,
+        total,
+        paymentMethod: paymentMethod || 'pending',
+        notes
+      });
+
+      // Also create bookings in PostgreSQL for admin dashboard
+      for (const item of cart.items) {
+        const service = await storage.getService(item.serviceId);
+        
+        await storage.createBooking({
+          serviceId: item.serviceId,
+          clientName,
+          clientEmail,
+          clientPhone: clientPhone || '',
+          bookingDate: item.scheduledDate || new Date().toISOString().split('T')[0],
+          bookingTime: item.scheduledTime || '09:00',
+          status: 'pending',
+          paymentStatus: 'pending',
+          notes: notes || null
+        });
+
+        // Create Google Calendar event if connected
+        if (service && await isCalendarConnected()) {
+          try {
+            await createCalendarEvent({
+              clientName,
+              clientEmail,
+              serviceName: service.name,
+              date: item.scheduledDate || new Date().toISOString().split('T')[0],
+              time: item.scheduledTime || '09:00',
+              duration: service.duration,
+              notes
+            });
+          } catch (calError) {
+            console.error("Failed to create calendar event:", calError);
+            // Don't fail the checkout if calendar fails
+          }
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        orderId,
+        total,
+        itemCount: cart.items.length,
+        message: "Order created successfully" 
+      });
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      res.status(500).json({ message: "Failed to process checkout" });
+    }
+  });
+
+  // Check Google Calendar connection status
+  app.get("/api/calendar/status", isAdminAuthenticated, async (req, res) => {
+    try {
+      const connected = await isCalendarConnected();
+      res.json({ connected });
+    } catch (error) {
+      res.json({ connected: false });
+    }
+  });
+
+  // ============ ORDERS ENDPOINTS (Admin) ============
+  
+  app.get("/api/admin/orders", isAdminAuthenticated, async (req, res) => {
+    try {
+      const orders = await firestoreStorage.getOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  app.put("/api/admin/orders/:orderId/status", isAdminAuthenticated, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { status } = req.body;
+      
+      const order = await firestoreStorage.updateOrderStatus(orderId, status);
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      res.status(500).json({ message: "Failed to update order status" });
     }
   });
 

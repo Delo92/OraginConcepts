@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { DisplayModeToggle } from "./display-mode-toggle";
+import { CartDrawer } from "./cart-drawer";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -59,6 +60,7 @@ export function Navigation() {
 
           <div className="flex items-center gap-2">
             <DisplayModeToggle />
+            <CartDrawer />
             <div className="hidden md:block">
               <Link href="/book">
                 <Button className="btn-metallic" data-testid="button-book-now-nav">Start a Project</Button>

@@ -1,16 +1,46 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock } from "lucide-react";
+import { Clock, ShoppingCart, Check } from "lucide-react";
 import { Link } from "wouter";
 import type { Service } from "@shared/schema";
+import { useCart } from "@/hooks/use-cart";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ServiceCardProps {
   service: Service;
   showBookButton?: boolean;
+  showAddToCart?: boolean;
 }
 
-export function ServiceCard({ service, showBookButton = true }: ServiceCardProps) {
+export function ServiceCard({ service, showBookButton = true, showAddToCart = true }: ServiceCardProps) {
+  const { addToCart, isAddingToCart } = useCart();
+  const { toast } = useToast();
+  const [justAdded, setJustAdded] = useState(false);
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCart({
+        serviceId: service.id,
+        serviceName: service.name,
+        price: service.price,
+        quantity: 1,
+      });
+      setJustAdded(true);
+      toast({
+        title: "Added to cart",
+        description: `${service.name} has been added to your cart.`,
+      });
+      setTimeout(() => setJustAdded(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   const formatDuration = (minutes: number) => {
     if (minutes >= 60) {
       const hours = Math.floor(minutes / 60);
@@ -59,13 +89,36 @@ export function ServiceCard({ service, showBookButton = true }: ServiceCardProps
             <span>{formatDuration(service.duration)}</span>
           </div>
 
-          {showBookButton && (
-            <Link href={`/book?service=${service.id}`}>
-              <Button size="sm" className="btn-metallic" data-testid={`button-book-service-${service.id}`}>
-                Get Started
+          <div className="flex items-center gap-2">
+            {showAddToCart && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleAddToCart}
+                disabled={isAddingToCart || justAdded}
+                data-testid={`button-add-to-cart-${service.id}`}
+              >
+                {justAdded ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Added
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 mr-1" />
+                    Add to Cart
+                  </>
+                )}
               </Button>
-            </Link>
-          )}
+            )}
+            {showBookButton && (
+              <Link href={`/book?service=${service.id}`}>
+                <Button size="sm" className="btn-metallic" data-testid={`button-book-service-${service.id}`}>
+                  Book Now
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

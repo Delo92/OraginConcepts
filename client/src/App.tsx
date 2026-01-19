@@ -14,6 +14,7 @@ import Services from "@/pages/services";
 import Booking from "@/pages/booking";
 import Gallery from "@/pages/gallery";
 import Project from "@/pages/project";
+import Checkout from "@/pages/checkout";
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminServices from "@/pages/admin/services";
@@ -76,6 +77,7 @@ function PublicRoutes() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/projects/:projectId" component={Project} />
       <Route path="/book" component={Booking} />
+      <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
   );
