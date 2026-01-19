@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -19,8 +20,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft, ArrowRight, Check, ExternalLink, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ExternalLink, Clock, DollarSign, CheckCircle2 } from "lucide-react";
 import type { Service, SiteSettings, InsertBooking } from "@shared/schema";
+import { useCart } from "@/hooks/use-cart";
 
 type BookingStep = "service" | "datetime" | "info" | "payment" | "confirmed";
 
@@ -35,7 +37,7 @@ export default function Booking() {
   const preselectedService = params.get("service");
 
   const [step, setStep] = useState<BookingStep>("service");
-  const [selectedServiceId, setSelectedServiceId] = useState<string>(preselectedService || "");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(preselectedService ? [preselectedService] : []);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string | undefined>();
   const [clientInfo, setClientInfo] = useState<{
@@ -48,6 +50,7 @@ export default function Booking() {
 
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { addItem } = useCart();
 
   const { data: services, isLoading: servicesLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
@@ -62,11 +65,11 @@ export default function Booking() {
   });
 
   const { data: availableSlots, isLoading: slotsLoading, isError: slotsError } = useQuery<TimeSlot[]>({
-    queryKey: ["/api/availability/slots", selectedDate ? format(selectedDate, "yyyy-MM-dd") : null, selectedServiceId],
+    queryKey: ["/api/availability/slots", selectedDate ? format(selectedDate, "yyyy-MM-dd") : null, selectedServiceIds[0]],
     queryFn: async () => {
-      if (!selectedDate || !selectedServiceId) return [];
+      if (!selectedDate || selectedServiceIds.length === 0) return [];
       const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const res = await fetch(`/api/availability/slots?date=${dateStr}&serviceId=${selectedServiceId}`, {
+      const res = await fetch(`/api/availability/slots?date=${dateStr}&serviceId=${selectedServiceIds[0]}`, {
         credentials: "include",
       });
       if (!res.ok) {
@@ -74,7 +77,7 @@ export default function Booking() {
       }
       return res.json();
     },
-    enabled: !!selectedDate && !!selectedServiceId,
+    enabled: !!selectedDate && selectedServiceIds.length > 0,
   });
 
   const createBookingMutation = useMutation({
@@ -96,7 +99,7 @@ export default function Booking() {
     },
   });
 
-  const selectedService = services?.find((s) => s.id.toString() === selectedServiceId);
+  const selectedServices = services?.filter((s) => selectedServiceIds.includes(s.id.toString())) || [];
   const activeServices = services?.filter((s) => s.isActive) || [];
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(0)}`;
@@ -117,10 +120,30 @@ export default function Booking() {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const handleServiceSelect = (serviceId: string) => {
-    setSelectedServiceId(serviceId);
-    setSelectedDate(undefined);
-    setSelectedTime(undefined);
+  const handleServiceToggle = (serviceId: string) => {
+    setSelectedServiceIds(prev => {
+      if (prev.includes(serviceId)) {
+        return prev.filter(id => id !== serviceId);
+      } else {
+        return [...prev, serviceId];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedServiceIds.length === activeServices.length) {
+      setSelectedServiceIds([]);
+    } else {
+      setSelectedServiceIds(activeServices.map(s => s.id.toString()));
+    }
+  };
+
+  const getTotalPrice = () => {
+    return selectedServices.reduce((sum, s) => sum + s.price, 0);
+  };
+
+  const getTotalDuration = () => {
+    return selectedServices.reduce((sum, s) => sum + s.duration, 0);
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -128,24 +151,34 @@ export default function Booking() {
     setSelectedTime(undefined);
   };
 
-  const handleFormSubmit = (data: {
+  const handleFormSubmit = async (data: {
     clientName: string;
     clientEmail: string;
     clientPhone: string;
     notes?: string;
   }) => {
-    if (!selectedService || !selectedDate || !selectedTime) return;
+    if (selectedServices.length === 0 || !selectedDate || !selectedTime) return;
 
     setClientInfo(data);
 
+    for (const service of selectedServices) {
+      await addItem({
+        serviceId: service.id,
+        serviceName: service.name,
+        price: service.price,
+        quantity: 1,
+        duration: service.duration,
+      });
+    }
+
     createBookingMutation.mutate({
-      serviceId: selectedService.id,
+      serviceId: selectedServices[0].id,
       clientName: data.clientName,
       clientEmail: data.clientEmail,
       clientPhone: data.clientPhone,
       bookingDate: format(selectedDate, "yyyy-MM-dd"),
       bookingTime: selectedTime,
-      notes: data.notes || null,
+      notes: data.notes || `Services: ${selectedServices.map(s => s.name).join(", ")}`,
       status: "pending",
       paymentStatus: "unpaid",
     });
@@ -161,7 +194,7 @@ export default function Booking() {
       .map(m => ({ name: m.displayName, url: m.paymentLink! }));
   };
 
-  const canProceedFromService = !!selectedServiceId;
+  const canProceedFromService = selectedServiceIds.length > 0;
   const canProceedFromDateTime = !!selectedDate && !!selectedTime;
 
   const stepIndicators = [
@@ -232,7 +265,10 @@ export default function Booking() {
         <div className="max-w-4xl mx-auto">
           {step === "service" && (
             <div className="space-y-6">
-              <h2 className="font-serif text-2xl text-center mb-8">Select a Service</h2>
+              <div className="text-center mb-8">
+                <h2 className="font-serif text-2xl mb-2">Select Services</h2>
+                <p className="text-muted-foreground text-sm">Choose one or more services for your project</p>
+              </div>
 
               {servicesLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -247,38 +283,83 @@ export default function Booking() {
                   ))}
                 </div>
               ) : activeServices.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {activeServices.map((service) => (
-                    <Card
-                      key={service.id}
-                      className={`cursor-pointer transition-all hover-elevate ${
-                        selectedServiceId === service.id.toString()
-                          ? "ring-2 ring-primary"
-                          : ""
-                      }`}
-                      onClick={() => handleServiceSelect(service.id.toString())}
-                      data-testid={`card-select-service-${service.id}`}
+                <>
+                  <div className="flex justify-between items-center mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="text-sm"
                     >
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
-                          <h3 className="font-serif text-lg font-medium">{service.name}</h3>
-                          <Badge variant="secondary">{formatPrice(service.price)}</Badge>
-                        </div>
-                        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                          {service.description}
-                        </p>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{formatDuration(service.duration)}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                      {selectedServiceIds.length === activeServices.length ? "Deselect All" : "Select All"}
+                    </Button>
+                    {selectedServiceIds.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        {selectedServiceIds.length} service{selectedServiceIds.length > 1 ? "s" : ""} selected
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {activeServices.map((service) => {
+                      const isSelected = selectedServiceIds.includes(service.id.toString());
+                      return (
+                        <Card
+                          key={service.id}
+                          className={`cursor-pointer transition-all hover-elevate ${
+                            isSelected ? "ring-2 ring-primary bg-primary/5" : ""
+                          }`}
+                          onClick={() => handleServiceToggle(service.id.toString())}
+                          data-testid={`card-select-service-${service.id}`}
+                        >
+                          <CardContent className="p-5">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-colors ${
+                                isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
+                              }`}>
+                                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
+                                  <h3 className="font-serif text-lg font-medium">{service.name}</h3>
+                                  <Badge variant="secondary">{formatPrice(service.price)}</Badge>
+                                </div>
+                                <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                                  {service.description}
+                                </p>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Clock className="h-4 w-4" />
+                                  <span>{formatDuration(service.duration)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No services available.</p>
                 </div>
+              )}
+
+              {selectedServiceIds.length > 0 && (
+                <Card className="bg-muted/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <p className="font-medium">{selectedServiceIds.length} service{selectedServiceIds.length > 1 ? "s" : ""} selected</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total: {formatDuration(getTotalDuration())}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold">{formatPrice(getTotalPrice())}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               <div className="flex justify-end pt-4">
@@ -304,14 +385,17 @@ export default function Booking() {
                 <h2 className="font-serif text-2xl">Select Date & Time</h2>
               </div>
 
-              {selectedService && (
+              {selectedServices.length > 0 && (
                 <Card className="mb-6">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                       <div>
-                        <p className="font-medium">{selectedService.name}</p>
+                        <p className="font-medium">{selectedServices.length} service{selectedServices.length > 1 ? "s" : ""} selected</p>
                         <p className="text-sm text-muted-foreground">
-                          {formatDuration(selectedService.duration)} • {formatPrice(selectedService.price)}
+                          {selectedServices.map(s => s.name).join(", ")}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDuration(getTotalDuration())} • {formatPrice(getTotalPrice())}
                         </p>
                       </div>
                       <Button variant="outline" size="sm" onClick={() => setStep("service")}>
@@ -370,14 +454,13 @@ export default function Booking() {
               <Card className="mb-6">
                 <CardContent className="p-4">
                   <div className="space-y-2">
-                    <p className="font-medium">{selectedService?.name}</p>
+                    <p className="font-medium">{selectedServices.map(s => s.name).join(", ")}</p>
                     <p className="text-sm text-muted-foreground">
                       {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
                       {selectedTime && ` at ${formatTimeDisplay(selectedTime)}`}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedService && formatDuration(selectedService.duration)} •{" "}
-                      {selectedService && formatPrice(selectedService.price)}
+                      {formatDuration(getTotalDuration())} • {formatPrice(getTotalPrice())}
                     </p>
                   </div>
                 </CardContent>
@@ -417,8 +500,8 @@ export default function Booking() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Service</span>
-                    <span className="font-medium">{selectedService?.name}</span>
+                    <span className="text-muted-foreground">Services</span>
+                    <span className="font-medium text-right">{selectedServices.map(s => s.name).join(", ")}</span>
                   </div>
                   <div className="flex justify-between gap-2">
                     <span className="text-muted-foreground">Date</span>
@@ -430,13 +513,13 @@ export default function Booking() {
                   </div>
                   <div className="flex justify-between gap-2">
                     <span className="text-muted-foreground">Duration</span>
-                    <span>{selectedService && formatDuration(selectedService.duration)}</span>
+                    <span>{formatDuration(getTotalDuration())}</span>
                   </div>
                   <div className="border-t border-border pt-3 mt-3">
                     <div className="flex justify-between gap-2">
                       <span className="font-medium">Total</span>
                       <span className="font-medium text-lg">
-                        {selectedService && formatPrice(selectedService.price)}
+                        {formatPrice(getTotalPrice())}
                       </span>
                     </div>
                   </div>
@@ -503,8 +586,8 @@ export default function Booking() {
               <Card className="mb-8 text-left">
                 <CardContent className="p-6 space-y-3">
                   <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Service</span>
-                    <span className="font-medium">{selectedService?.name}</span>
+                    <span className="text-muted-foreground">Services</span>
+                    <span className="font-medium text-right">{selectedServices.map(s => s.name).join(", ")}</span>
                   </div>
                   <div className="flex justify-between gap-2">
                     <span className="text-muted-foreground">Date</span>
@@ -517,6 +600,10 @@ export default function Booking() {
                   <div className="flex justify-between gap-2">
                     <span className="text-muted-foreground">Name</span>
                     <span>{clientInfo?.clientName}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="font-bold">{formatPrice(getTotalPrice())}</span>
                   </div>
                 </CardContent>
               </Card>
