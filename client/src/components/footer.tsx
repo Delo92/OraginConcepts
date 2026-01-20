@@ -22,7 +22,7 @@ export function Footer() {
             <h3 
               className="font-serif text-xl font-medium mb-4 cursor-pointer" 
               data-testid="text-footer-business-name"
-              onClick={() => setLocation("/admin")}
+              onClick={() => setLocation("/admin/login")}
             >
               {businessName}
             </h3>
