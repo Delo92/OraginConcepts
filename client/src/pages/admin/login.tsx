@@ -13,14 +13,15 @@ type UserLevel = "client" | "admin";
 
 export default function AdminLogin() {
   const [userLevel, setUserLevel] = useState<UserLevel>("client");
+  const [companyCode, setCompanyCode] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const adminLoginMutation = useMutation({
-    mutationFn: async (password: string) => {
-      const res = await apiRequest("POST", "/api/admin/login", { password });
+    mutationFn: async ({ companyCode, password }: { companyCode: string; password: string }) => {
+      const res = await apiRequest("POST", "/api/admin/login", { companyCode, password });
       return res.json();
     },
     onSuccess: () => {
@@ -56,8 +57,8 @@ export default function AdminLogin() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (userLevel === "admin" && password.trim()) {
-      adminLoginMutation.mutate(password);
+    if (userLevel === "admin" && companyCode.trim() && password.trim()) {
+      adminLoginMutation.mutate({ companyCode, password });
     } else if (userLevel === "client" && email.trim()) {
       clientLoginMutation.mutate(email);
     }
@@ -109,18 +110,32 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {userLevel === "admin" ? (
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter admin password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isPending}
-                  data-testid="input-admin-password"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="companyCode">Company Code</Label>
+                  <Input
+                    id="companyCode"
+                    type="text"
+                    placeholder="Enter company code"
+                    value={companyCode}
+                    onChange={(e) => setCompanyCode(e.target.value)}
+                    disabled={isPending}
+                    data-testid="input-company-code"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter admin password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isPending}
+                    data-testid="input-admin-password"
+                  />
+                </div>
+              </>
             ) : (
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
@@ -138,7 +153,7 @@ export default function AdminLogin() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isPending || (userLevel === "admin" ? !password.trim() : !email.trim())}
+              disabled={isPending || (userLevel === "admin" ? (!companyCode.trim() || !password.trim()) : !email.trim())}
               data-testid="button-login"
             >
               {isPending ? (

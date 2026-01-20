@@ -82,11 +82,16 @@ export async function registerRoutes(
   );
 
   app.post("/api/admin/login", (req, res) => {
-    const { password } = req.body;
+    const { companyCode, password } = req.body;
     const adminPassword = process.env.ADMIN_PASSWORD;
+    const validCompanyCode = "made4me";
 
     if (!adminPassword) {
       return res.status(500).json({ message: "Admin password not configured. Please set ADMIN_PASSWORD." });
+    }
+
+    if (companyCode !== validCompanyCode) {
+      return res.status(401).json({ message: "Invalid company code" });
     }
 
     if (password === adminPassword) {
