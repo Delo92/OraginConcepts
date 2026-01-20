@@ -44,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Clock, DollarSign, Image as ImageIcon, X, Sun, Moon, Users, Upload, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, DollarSign, Image as ImageIcon, Video, X, Sun, Moon, Users, Upload, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Service, InsertService, GalleryItem } from "@shared/schema";
 
@@ -75,30 +75,72 @@ export default function AdminServices() {
     queryKey: ["/api/gallery"],
   });
 
-  const imageGalleryItems = galleryItems?.filter(item => item.mediaType === "image") || [];
+  const mediaGalleryItems = galleryItems || [];
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
       form.setValue("imageUrl", response.objectPath);
-      toast({ title: "Image uploaded successfully" });
+      toast({ title: "Media uploaded successfully" });
     },
     onError: (error) => {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     },
   });
 
+  const validateVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        if (video.duration > 10) {
+          toast({ 
+            title: "Video too long", 
+            description: "Please select a video that is 10 seconds or shorter", 
+            variant: "destructive" 
+          });
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      };
+      video.onerror = () => {
+        resolve(false);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/")) {
-        toast({ title: "Invalid file", description: "Please select an image file", variant: "destructive" });
+      const isImage = file.type.startsWith("image/");
+      const isVideo = file.type.startsWith("video/");
+      
+      if (!isImage && !isVideo) {
+        toast({ title: "Invalid file", description: "Please select an image or video file", variant: "destructive" });
         return;
       }
+      
+      if (isVideo) {
+        const isValidDuration = await validateVideoDuration(file);
+        if (!isValidDuration) {
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+          return;
+        }
+      }
+      
       await uploadFile(file);
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+  
+  const isVideoUrl = (url: string) => {
+    return url.match(/\.(mp4|webm|mov|avi|mkv)$/i) || url.includes("video");
   };
 
   const form = useForm<ServiceFormData>({
@@ -324,14 +366,25 @@ export default function AdminServices() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Service Image (optional)</FormLabel>
+                      <FormLabel>Service Media (optional)</FormLabel>
                       {field.value && (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border mb-2">
-                          <img
-                            src={field.value}
-                            alt="Selected image"
-                            className="w-full h-full object-cover"
-                          />
+                          {isVideoUrl(field.value) ? (
+                            <video
+                              src={field.value}
+                              className="w-full h-full object-cover"
+                              muted
+                              loop
+                              autoPlay
+                              playsInline
+                            />
+                          ) : (
+                            <img
+                              src={field.value}
+                              alt="Selected media"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                           <button
                             type="button"
                             onClick={() => field.onChange("")}
@@ -343,13 +396,13 @@ export default function AdminServices() {
                         </div>
                       )}
                       
-                      {/* Upload new image button */}
+                      {/* Upload new media button */}
                       <div className="mb-3">
                         <input
                           type="file"
                           ref={fileInputRef}
                           onChange={handleFileSelect}
-                          accept="image/*"
+                          accept="image/*,video/*"
                           className="hidden"
                         />
                         <Button
@@ -368,19 +421,19 @@ export default function AdminServices() {
                           ) : (
                             <>
                               <Upload className="h-4 w-4 mr-2" />
-                              Upload New Image
+                              Upload Image or Video (10s max)
                             </>
                           )}
                         </Button>
                       </div>
 
                       {/* Or select from portfolio */}
-                      {imageGalleryItems.length > 0 && (
+                      {mediaGalleryItems.length > 0 && (
                         <>
                           <p className="text-xs text-muted-foreground mb-2">Or select from portfolio:</p>
                           <ScrollArea className="h-24 border rounded-md p-2">
                             <div className="flex gap-2 flex-wrap">
-                              {imageGalleryItems.map((item) => (
+                              {mediaGalleryItems.map((item) => (
                                 <button
                                   key={item.id}
                                   type="button"
@@ -392,11 +445,17 @@ export default function AdminServices() {
                                   }`}
                                   data-testid={`button-select-gallery-${item.id}`}
                                 >
-                                  <img
-                                    src={item.mediaUrl}
-                                    alt={item.title || "Portfolio image"}
-                                    className="w-full h-full object-cover"
-                                  />
+                                  {item.mediaType === "video" ? (
+                                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                                      <Video className="h-6 w-6 text-muted-foreground" />
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={item.mediaUrl}
+                                      alt={item.title || "Portfolio media"}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  )}
                                 </button>
                               ))}
                             </div>
