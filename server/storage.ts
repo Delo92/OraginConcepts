@@ -135,6 +135,10 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(bookings).where(eq(bookings.bookingDate, date));
   }
 
+  async getBookingsByEmail(email: string): Promise<Booking[]> {
+    return db.select().from(bookings).where(eq(bookings.clientEmail, email)).orderBy(bookings.createdAt);
+  }
+
   async createBooking(booking: InsertBooking): Promise<Booking> {
     const [newBooking] = await db.insert(bookings).values(booking).returning();
     return newBooking;

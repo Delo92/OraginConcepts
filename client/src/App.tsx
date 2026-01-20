@@ -25,6 +25,7 @@ import AdminGallery from "@/pages/admin/gallery";
 import AdminProjectMedia from "@/pages/admin/project-media";
 import AdminAppearance from "@/pages/admin/appearance";
 import AdminEmailTemplates from "@/pages/admin/email-templates";
+import ClientDashboard from "@/pages/client/dashboard";
 
 function AdminRoutes() {
   const { isAdmin, isLoading } = useAdminAuth();
@@ -80,6 +81,7 @@ function PublicRoutes() {
       <Route path="/projects/:projectId" component={Project} />
       <Route path="/book" component={Booking} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/client/dashboard" component={ClientDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

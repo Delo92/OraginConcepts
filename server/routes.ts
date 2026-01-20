@@ -110,6 +110,55 @@ export async function registerRoutes(
     });
   });
 
+  // ============ CLIENT AUTH ENDPOINTS ============
+
+  app.post("/api/client/login", async (req, res) => {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    try {
+      const bookings = await storage.getBookingsByEmail(email);
+      if (bookings.length === 0) {
+        return res.status(404).json({ message: "No bookings found for this email" });
+      }
+      
+      req.session.clientEmail = email;
+      res.json({ success: true, email });
+    } catch (error) {
+      console.error("Error during client login:", error);
+      res.status(500).json({ message: "Failed to login" });
+    }
+  });
+
+  app.get("/api/client/session", (req, res) => {
+    res.json({ 
+      isLoggedIn: !!req.session?.clientEmail,
+      email: req.session?.clientEmail || null 
+    });
+  });
+
+  app.post("/api/client/logout", (req, res) => {
+    req.session.clientEmail = undefined;
+    res.json({ success: true });
+  });
+
+  app.get("/api/client/bookings", async (req, res) => {
+    if (!req.session?.clientEmail) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const bookings = await storage.getBookingsByEmail(req.session.clientEmail);
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching client bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
   app.get("/api/services", async (req, res) => {
     try {
       const services = await storage.getServices();
