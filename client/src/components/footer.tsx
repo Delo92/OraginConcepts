@@ -1,9 +1,10 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Mail, Clock } from "lucide-react";
 import type { SiteSettings } from "@shared/schema";
 
 export function Footer() {
+  const [, setLocation] = useLocation();
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/settings"],
   });
@@ -18,7 +19,13 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-serif text-xl font-medium mb-4" data-testid="text-footer-business-name">{businessName}</h3>
+            <h3 
+              className="font-serif text-xl font-medium mb-4 cursor-pointer" 
+              data-testid="text-footer-business-name"
+              onClick={() => setLocation("/admin")}
+            >
+              {businessName}
+            </h3>
             <p className="text-muted-foreground text-sm leading-relaxed" data-testid="text-footer-tagline">
               {footerTagline}
             </p>
@@ -52,13 +59,6 @@ export function Footer() {
                 <Link href="/book">
                   <span className="text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-book">
                     Get Started
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin">
-                  <span className="text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-admin">
-                    Owner Login
                   </span>
                 </Link>
               </li>
