@@ -8,6 +8,10 @@ import { useCart } from "@/hooks/use-cart";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+const isVideoUrl = (url: string) => {
+  return url.match(/\.(mp4|webm|mov|avi|mkv)$/i) || url.includes("video");
+};
+
 interface ServiceCardProps {
   service: Service;
   showBookButton?: boolean;
@@ -58,11 +62,22 @@ export function ServiceCard({ service, showBookButton = true, showAddToCart = tr
     <Card className="overflow-visible group" data-testid={`card-service-${service.id}`}>
       <div className="aspect-[4/3] overflow-hidden rounded-t-md">
         {service.imageUrl ? (
-          <img
-            src={service.imageUrl}
-            alt={service.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          isVideoUrl(service.imageUrl) ? (
+            <video
+              src={service.imageUrl}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              muted
+              loop
+              autoPlay
+              playsInline
+            />
+          ) : (
+            <img
+              src={service.imageUrl}
+              alt={service.name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          )
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <span className="text-muted-foreground text-sm">No image</span>
