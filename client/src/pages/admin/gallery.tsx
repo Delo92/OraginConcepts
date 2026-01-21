@@ -47,6 +47,9 @@ export default function AdminGallery() {
   const [editDescription, setEditDescription] = useState("");
   const [editProjectUrl, setEditProjectUrl] = useState("");
   const [editDisplayMode, setEditDisplayMode] = useState("both");
+  const [editMediaUrl, setEditMediaUrl] = useState("");
+  const [editMediaType, setEditMediaType] = useState("image");
+  const [isEditUploading, setIsEditUploading] = useState(false);
   const fileInputRef = useState<HTMLInputElement | null>(null);
 
   const { data: galleryItems, isLoading } = useQuery<GalleryItem[]>({
@@ -123,7 +126,7 @@ export default function AdminGallery() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: { id: number; title?: string; description?: string; projectUrl?: string; displayMode?: string }) => {
+    mutationFn: async (data: { id: number; title?: string; description?: string; projectUrl?: string; displayMode?: string; mediaUrl?: string; mediaType?: string }) => {
       const { id, ...updateData } = data;
       return apiRequest("PUT", `/api/gallery/${id}`, updateData);
     },
@@ -146,6 +149,56 @@ export default function AdminGallery() {
     setEditDescription(item.description || "");
     setEditProjectUrl(item.projectUrl || "");
     setEditDisplayMode(item.displayMode || "both");
+    setEditMediaUrl(item.mediaUrl || "");
+    setEditMediaType(item.mediaType || "image");
+  };
+
+  const handleEditMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image (JPG, PNG, GIF, WebP) or video (MP4, WebM, MOV)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsEditUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Upload failed");
+      const data = await response.json();
+      setEditMediaUrl(data.objectPath);
+      setEditMediaType(getMediaType(file.type));
+      toast({ title: "Image uploaded successfully" });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditUploading(false);
+      e.target.value = "";
+    }
   };
 
   const handleEditSave = () => {
@@ -156,6 +209,8 @@ export default function AdminGallery() {
       description: editDescription || undefined,
       projectUrl: editProjectUrl || undefined,
       displayMode: editDisplayMode,
+      mediaUrl: editMediaUrl !== editItem.mediaUrl ? editMediaUrl : undefined,
+      mediaType: editMediaType !== editItem.mediaType ? editMediaType : undefined,
     });
   };
 
@@ -374,6 +429,69 @@ export default function AdminGallery() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Cover Image/Video */}
+            <div className="space-y-2">
+              <Label>Cover Image/Video</Label>
+              <div className="flex items-start gap-4">
+                <div className="w-24 h-24 rounded-md overflow-hidden border bg-muted flex-shrink-0">
+                  {editMediaUrl ? (
+                    editMediaType === "video" ? (
+                      <video
+                        src={editMediaUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                      />
+                    ) : (
+                      <img
+                        src={editMediaUrl}
+                        alt="Current cover"
+                        className="w-full h-full object-cover"
+                      />
+                    )
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={handleEditMediaUpload}
+                    id="edit-media-upload"
+                  />
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    disabled={isEditUploading}
+                  >
+                    <label htmlFor="edit-media-upload" className="cursor-pointer">
+                      {isEditUploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Change Image
+                        </>
+                      )}
+                    </label>
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Upload a new image or video to replace the cover
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="edit-title">Title</Label>
               <Input
