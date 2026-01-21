@@ -177,11 +177,14 @@ export default function AdminGallery() {
 
     setIsEditUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const safeFileName = encodeURIComponent(file.name);
       const response = await fetch("/api/uploads/file", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+          "X-File-Name": safeFileName,
+        },
+        body: file,
         credentials: "include",
       });
       if (!response.ok) throw new Error("Upload failed");
