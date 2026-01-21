@@ -179,7 +179,7 @@ export default function AdminGallery() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/uploads/file", {
         method: "POST",
         body: formData,
         credentials: "include",
